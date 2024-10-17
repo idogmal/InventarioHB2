@@ -1,74 +1,68 @@
 package view;
 
 import javafx.application.Application;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
-import javafx.scene.layout.GridPane;
+import javafx.scene.control.Button;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import model.Computer;
-import model.DatabaseHelper;
 
 public class InventoryApp extends Application {
 
-    private DatabaseHelper dbHelper = new DatabaseHelper();
+    private TableView<Computer> table;
+    private ObservableList<Computer> computerList;
 
     @Override
     public void start(Stage primaryStage) {
-        dbHelper.createTable();
+        // Criando as colunas da tabela
+        TableColumn<Computer, String> tagColumn = new TableColumn<>("Etiqueta TI");
+        tagColumn.setMinWidth(100);
+        tagColumn.setCellValueFactory(new PropertyValueFactory<>("tag"));
 
-        TextField tagField = new TextField();
-        tagField.setPromptText("Etiqueta TI");
+        TableColumn<Computer, String> modelColumn = new TableColumn<>("Modelo");
+        modelColumn.setMinWidth(100);
+        modelColumn.setCellValueFactory(new PropertyValueFactory<>("model"));
 
-        TextField serialNumberField = new TextField();
-        serialNumberField.setPromptText("Número de Série");
+        TableColumn<Computer, String> brandColumn = new TableColumn<>("Marca");
+        brandColumn.setMinWidth(100);
+        brandColumn.setCellValueFactory(new PropertyValueFactory<>("brand"));
 
-        TextField modelField = new TextField();
-        modelField.setPromptText("Modelo");
+        // Criando a tabela
+        table = new TableView<>();
+        computerList = FXCollections.observableArrayList();
+        table.setItems(computerList);
+        table.getColumns().addAll(tagColumn, modelColumn, brandColumn);
 
-        TextField brandField = new TextField();
-        brandField.setPromptText("Marca");
+        // Campo de busca
+        TextField searchField = new TextField();
+        searchField.setPromptText("Pesquisar...");
+        searchField.setMinWidth(200);
 
-        Button saveButton = new Button("Salvar Computador");
-        saveButton.setOnAction(e -> {
-            Computer computer = new Computer(
-                    tagField.getText(),
-                    serialNumberField.getText(),
-                    modelField.getText(),
-                    brandField.getText(),
-                    "Novo",
-                    "Usuário",
-                    "Windows 10",
-                    "Office 2019",
-                    "Empresa",
-                    "2023-01-01"
-            );
-            dbHelper.insertComputer(computer);
-        });
+        // Botões de ação
+        Button addButton = new Button("Cadastrar");
+        Button editButton = new Button("Editar");
+        Button deleteButton = new Button("Excluir");
 
-        GridPane gridPane = new GridPane();
-        gridPane.setPadding(new Insets(10));
-        gridPane.setHgap(10);
-        gridPane.setVgap(10);
+        // Layout dos botões
+        HBox buttonLayout = new HBox(10);
+        buttonLayout.getChildren().addAll(addButton, editButton, deleteButton);
 
-        gridPane.add(new Label("Etiqueta TI:"), 0, 0);
-        gridPane.add(tagField, 1, 0);
-        gridPane.add(new Label("Número de Série:"), 0, 1);
-        gridPane.add(serialNumberField, 1, 1);
-        gridPane.add(new Label("Modelo:"), 0, 2);
-        gridPane.add(modelField, 1, 2);
-        gridPane.add(new Label("Marca:"), 0, 3);
-        gridPane.add(brandField, 1, 3);
-
-        gridPane.add(saveButton, 1, 4);
-
+        // Layout principal
         VBox layout = new VBox(10);
         layout.setPadding(new Insets(20));
-        layout.getChildren().add(gridPane);
+        layout.getChildren().addAll(searchField, table, buttonLayout);
 
+        // Definindo a cena e a janela
         Scene scene = new Scene(layout, 600, 400);
-        primaryStage.setTitle("Cadastro de Computadores");
+        primaryStage.setTitle("Inventário de Computadores");
         primaryStage.setScene(scene);
         primaryStage.show();
     }
