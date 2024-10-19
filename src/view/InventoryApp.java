@@ -1,5 +1,3 @@
-// Código ajustado do InventoryApp.java
-
 package view;
 
 import controller.InventoryController;
@@ -17,7 +15,11 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import model.Computer;
 import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.beans.property.SimpleStringProperty;
 
+import model.HistoryEntry;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 import java.io.File;
 import java.io.IOException;
@@ -52,6 +54,7 @@ public class InventoryApp extends Application {
         Button exportButton = new Button("Exportar para CSV");
         Button backupButton = new Button("Backup");
         Button restoreButton = new Button("Restaurar");
+        Button historyButton = new Button("Visualizar Histórico");
 
         // Ações dos botões
         addButton.setOnAction(e -> openComputerForm(null));  // Para cadastrar novo
@@ -60,9 +63,10 @@ public class InventoryApp extends Application {
         exportButton.setOnAction(e -> handleExportAction()); // Para exportar a lista para CSV
         backupButton.setOnAction(e -> handleBackupAction()); // Para fazer o backup
         restoreButton.setOnAction(e -> handleRestoreAction()); // Para restaurar o backup feito
+        historyButton.setOnAction(e -> openHistoryWindow());  // Para abrir histórico
 
         // Layout dos botões
-        HBox buttonLayout = new HBox(10, addButton, editButton, deleteButton, exportButton, backupButton, restoreButton);
+        HBox buttonLayout = new HBox(10, addButton, editButton, deleteButton, exportButton, backupButton, restoreButton, historyButton);
 
         // Layout principal com a barra de busca
         VBox layout = new VBox(10, searchField, table, buttonLayout);
@@ -125,13 +129,72 @@ public class InventoryApp extends Application {
         // Adicionar colunas à tabela
         table.getColumns().addAll(tagColumn, modelColumn, brandColumn, stateColumn, userColumn, serialColumn, windowsColumn, officeColumn, locationColumn, purchaseColumn);
         table.setItems(computerList);
+
+        // Configurar colunas para serem editáveis e adicionar ao histórico
+        tagColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        tagColumn.setOnEditCommit(event -> {
+            event.getRowValue().setTag(event.getNewValue());
+            controller.addHistory("Editado", "admin", "Alterada a etiqueta TI para " + event.getNewValue());
+        });
+
+        modelColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        modelColumn.setOnEditCommit(event -> {
+            event.getRowValue().setModel(event.getNewValue());
+            controller.addHistory("Editado", "admin", "Alterado o modelo para " + event.getNewValue());
+        });
+
+        brandColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        brandColumn.setOnEditCommit(event -> {
+            event.getRowValue().setBrand(event.getNewValue());
+            controller.addHistory("Editado", "admin", "Alterada a marca para " + event.getNewValue());
+        });
+
+        stateColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        stateColumn.setOnEditCommit(event -> {
+            event.getRowValue().setState(event.getNewValue());
+            controller.addHistory("Editado", "admin", "Alterado o estado para " + event.getNewValue());
+        });
+
+        userColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        userColumn.setOnEditCommit(event -> {
+            event.getRowValue().setUserName(event.getNewValue());
+            controller.addHistory("Editado", "admin", "Alterado o usuário para " + event.getNewValue());
+        });
+
+        serialColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        serialColumn.setOnEditCommit(event -> {
+            event.getRowValue().setSerialNumber(event.getNewValue());
+            controller.addHistory("Editado", "admin", "Alterado o número de série para " + event.getNewValue());
+        });
+
+        windowsColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        windowsColumn.setOnEditCommit(event -> {
+            event.getRowValue().setWindowsVersion(event.getNewValue());
+            controller.addHistory("Editado", "admin", "Alterada a versão do Windows para " + event.getNewValue());
+        });
+
+        officeColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        officeColumn.setOnEditCommit(event -> {
+            event.getRowValue().setOfficeVersion(event.getNewValue());
+            controller.addHistory("Editado", "admin", "Alterada a versão do Office para " + event.getNewValue());
+        });
+
+        locationColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        locationColumn.setOnEditCommit(event -> {
+            event.getRowValue().setLocation(event.getNewValue());
+            controller.addHistory("Editado", "admin", "Alterada a localização para " + event.getNewValue());
+        });
+
+        purchaseColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        purchaseColumn.setOnEditCommit(event -> {
+            event.getRowValue().setPurchaseDate(event.getNewValue());
+            controller.addHistory("Editado", "admin", "Alterada a data de compra para " + event.getNewValue());
+        });
+
+
     }
 
-
-
-
-
-// Método genérico para criar colunas de tabela
+    // Método genérico para criar colunas de tabela
     private TableColumn<Computer, String> createTableColumn(String title, String property, int width) {
         TableColumn<Computer, String> column = new TableColumn<>(title);
         column.setMinWidth(width);
@@ -167,11 +230,54 @@ public class InventoryApp extends Application {
         }
     }
 
+    // Método para abrir a janela de histórico
+    private void openHistoryWindow() {
+        Stage historyStage = new Stage();
+        historyStage.setTitle("Histórico de Alterações");
+
+        TableView<HistoryEntry> historyTable = new TableView<>();
+        historyTable.setEditable(false);
+
+        // Colunas para a tabela de histórico
+        TableColumn<HistoryEntry, String> actionColumn = new TableColumn<>("Ação");
+        actionColumn.setCellValueFactory(new PropertyValueFactory<>("action"));
+
+        TableColumn<HistoryEntry, String> userColumn = new TableColumn<>("Usuário");
+        userColumn.setCellValueFactory(new PropertyValueFactory<>("user"));
+
+        // Coluna de Data e Hora com formatação
+        TableColumn<HistoryEntry, String> timestampColumn = new TableColumn<>("Data e Hora");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+
+        timestampColumn.setCellValueFactory(cellData -> {
+            LocalDateTime timestamp = cellData.getValue().getTimestamp();
+            return new SimpleStringProperty(timestamp.format(formatter)); // Formata a data e hora
+        });
+
+        TableColumn<HistoryEntry, String> descriptionColumn = new TableColumn<>("Descrição");
+        descriptionColumn.setCellValueFactory(new PropertyValueFactory<>("description"));
+
+        // Adicionar colunas à tabela de histórico
+        historyTable.getColumns().addAll(actionColumn, userColumn, timestampColumn, descriptionColumn);
+
+        // Preencher a tabela com os dados de histórico
+        historyTable.setItems(controller.getHistoryList());
+
+        // Layout da janela de histórico
+        VBox layout = new VBox(10, historyTable);
+        layout.setPadding(new Insets(20));
+
+        Scene scene = new Scene(layout, 600, 400);
+        historyStage.setScene(scene);
+        historyStage.show();
+    }
+
+
     // Ação do botão "Excluir"
     private void handleDeleteAction() {
         Computer selectedComputer = table.getSelectionModel().getSelectedItem();
         if (selectedComputer != null) {
-            controller.deleteComputer(selectedComputer);
+            controller.deleteComputer(selectedComputer, "admin");  // Passando o nome do usuário
         } else {
             showAlert("Seleção necessária", "Por favor, selecione um computador para excluir.");
         }
@@ -213,7 +319,6 @@ public class InventoryApp extends Application {
             }
         }
     }
-
 
     // Abre o formulário de cadastro/edição
     private void openComputerForm(Computer computer) {
@@ -257,7 +362,7 @@ public class InventoryApp extends Application {
                         locationField.getText(),
                         purchaseField.getText()
                 );
-                controller.addComputer(newComputer);
+                controller.addComputer(newComputer, "admin");  // Passando o nome do usuário
             } else {
                 // Atualizar computador existente
                 Computer updatedComputer = new Computer(
@@ -272,7 +377,7 @@ public class InventoryApp extends Application {
                         locationField.getText(),
                         purchaseField.getText()
                 );
-                controller.editComputer(computer, updatedComputer);
+                controller.editComputer(computer, updatedComputer, "admin");  // Passando o nome do usuário
             }
             formStage.close();
         });
