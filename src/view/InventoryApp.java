@@ -1,5 +1,8 @@
+// Código ajustado do InventoryApp.java
+
 package view;
 
+import controller.InventoryController;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -10,49 +13,73 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import model.Computer;
+import javafx.scene.control.cell.TextFieldTableCell;
+
+
+import java.io.File;
+import java.io.IOException;
 
 public class InventoryApp extends Application {
 
     private TableView<Computer> table;
     private ObservableList<Computer> computerList;
+    private InventoryController controller;
 
     @Override
     public void start(Stage primaryStage) {
+        computerList = FXCollections.observableArrayList();
+        controller = new InventoryController(computerList);
+
         // Configuração da tabela
         setupTable();
+
+        // Adicionar barra de busca
+        TextField searchField = new TextField();
+        searchField.setPromptText("Buscar por etiqueta, modelo, marca ou usuário");
+
+        // Lógica de atualização da tabela com base na busca
+        searchField.textProperty().addListener((observable, oldValue, newValue) -> {
+            table.setItems(controller.searchComputers(newValue));
+        });
 
         // Botões de ação
         Button addButton = new Button("Cadastrar");
         Button editButton = new Button("Editar");
         Button deleteButton = new Button("Excluir");
+        Button exportButton = new Button("Exportar para CSV");
+        Button backupButton = new Button("Backup");
+        Button restoreButton = new Button("Restaurar");
 
         // Ações dos botões
         addButton.setOnAction(e -> openComputerForm(null));  // Para cadastrar novo
         editButton.setOnAction(e -> handleEditAction());     // Para editar o selecionado
         deleteButton.setOnAction(e -> handleDeleteAction()); // Para excluir o selecionado
+        exportButton.setOnAction(e -> handleExportAction()); // Para exportar a lista para CSV
+        backupButton.setOnAction(e -> handleBackupAction()); // Para fazer o backup
+        restoreButton.setOnAction(e -> handleRestoreAction()); // Para restaurar o backup feito
 
         // Layout dos botões
-        HBox buttonLayout = new HBox(10, addButton, editButton, deleteButton);
+        HBox buttonLayout = new HBox(10, addButton, editButton, deleteButton, exportButton, backupButton, restoreButton);
 
-        // Layout principal
-        VBox layout = new VBox(10, table, buttonLayout);
+        // Layout principal com a barra de busca
+        VBox layout = new VBox(10, searchField, table, buttonLayout);
         layout.setPadding(new Insets(20));
 
         // Configurar a cena
-        Scene scene = new Scene(layout, 900, 500);  // Aumentei o tamanho da janela para acomodar todas as colunas
+        Scene scene = new Scene(layout, 900, 500);
         primaryStage.setTitle("Inventário de Computadores");
         primaryStage.setScene(scene);
         primaryStage.show();
     }
 
-    // Configuração da tabela e suas colunas
     private void setupTable() {
         table = new TableView<>();
-        computerList = FXCollections.observableArrayList();
+        table.setEditable(true);
 
-        // Criar todas as colunas para cada campo
+        // Criar todas as colunas
         TableColumn<Computer, String> tagColumn = createTableColumn("Etiqueta TI", "tag", 100);
         TableColumn<Computer, String> modelColumn = createTableColumn("Modelo", "model", 100);
         TableColumn<Computer, String> brandColumn = createTableColumn("Marca", "brand", 100);
@@ -64,17 +91,70 @@ public class InventoryApp extends Application {
         TableColumn<Computer, String> locationColumn = createTableColumn("Localização", "location", 150);
         TableColumn<Computer, String> purchaseColumn = createTableColumn("Data de Compra", "purchaseDate", 120);
 
-        // Adicionar todas as colunas na tabela
+        // Configurar colunas para serem editáveis
+        tagColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        tagColumn.setOnEditCommit(event -> event.getRowValue().setTag(event.getNewValue()));
+
+        modelColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        modelColumn.setOnEditCommit(event -> event.getRowValue().setModel(event.getNewValue()));
+
+        brandColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        brandColumn.setOnEditCommit(event -> event.getRowValue().setBrand(event.getNewValue()));
+
+        stateColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        stateColumn.setOnEditCommit(event -> event.getRowValue().setState(event.getNewValue()));
+
+        userColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        userColumn.setOnEditCommit(event -> event.getRowValue().setUserName(event.getNewValue()));
+
+        serialColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        serialColumn.setOnEditCommit(event -> event.getRowValue().setSerialNumber(event.getNewValue()));
+
+        windowsColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        windowsColumn.setOnEditCommit(event -> event.getRowValue().setWindowsVersion(event.getNewValue()));
+
+        officeColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        officeColumn.setOnEditCommit(event -> event.getRowValue().setOfficeVersion(event.getNewValue()));
+
+        locationColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        locationColumn.setOnEditCommit(event -> event.getRowValue().setLocation(event.getNewValue()));
+
+        purchaseColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        purchaseColumn.setOnEditCommit(event -> event.getRowValue().setPurchaseDate(event.getNewValue()));
+
+        // Adicionar colunas à tabela
         table.getColumns().addAll(tagColumn, modelColumn, brandColumn, stateColumn, userColumn, serialColumn, windowsColumn, officeColumn, locationColumn, purchaseColumn);
         table.setItems(computerList);
     }
 
-    // Método genérico para criar colunas de tabela
+
+
+
+
+// Método genérico para criar colunas de tabela
     private TableColumn<Computer, String> createTableColumn(String title, String property, int width) {
         TableColumn<Computer, String> column = new TableColumn<>(title);
         column.setMinWidth(width);
         column.setCellValueFactory(new PropertyValueFactory<>(property));
         return column;
+    }
+
+    // Ação para exportar a lista para CSV
+    private void handleExportAction() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Salvar arquivo CSV");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
+        File file = fileChooser.showSaveDialog(table.getScene().getWindow());
+
+        if (file != null) {
+            try {
+                controller.exportToCSV(file.getAbsolutePath());
+                showAlert("Sucesso", "Dados exportados para " + file.getName());
+            } catch (IOException ex) {
+                showAlert("Erro", "Não foi possível exportar os dados.");
+                ex.printStackTrace();
+            }
+        }
     }
 
     // Ação do botão "Editar"
@@ -91,11 +171,49 @@ public class InventoryApp extends Application {
     private void handleDeleteAction() {
         Computer selectedComputer = table.getSelectionModel().getSelectedItem();
         if (selectedComputer != null) {
-            computerList.remove(selectedComputer);
+            controller.deleteComputer(selectedComputer);
         } else {
             showAlert("Seleção necessária", "Por favor, selecione um computador para excluir.");
         }
     }
+
+    // Função de Backup
+    private void handleBackupAction() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Salvar Backup");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
+        File file = fileChooser.showSaveDialog(table.getScene().getWindow());
+
+        if (file != null) {
+            try {
+                controller.backupData(file.getAbsolutePath());
+                showAlert("Sucesso", "Backup realizado com sucesso em " + file.getName());
+            } catch (IOException ex) {
+                showAlert("Erro", "Falha ao realizar o backup.");
+                ex.printStackTrace();
+            }
+        }
+    }
+
+    // Função de Restauração
+    private void handleRestoreAction() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Restaurar Backup");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
+        File file = fileChooser.showOpenDialog(table.getScene().getWindow());
+
+        if (file != null) {
+            try {
+                controller.restoreData(file.getAbsolutePath());
+                table.refresh();
+                showAlert("Sucesso", "Dados restaurados com sucesso de " + file.getName());
+            } catch (IOException ex) {
+                showAlert("Erro", "Falha ao restaurar os dados.");
+                ex.printStackTrace();
+            }
+        }
+    }
+
 
     // Abre o formulário de cadastro/edição
     private void openComputerForm(Computer computer) {
@@ -124,7 +242,40 @@ public class InventoryApp extends Application {
 
         // Botão de salvar
         Button saveButton = new Button("Salvar");
-        saveButton.setOnAction(e -> saveComputer(computer, tagField, modelField, brandField, stateField, userField, serialField, windowsField, officeField, locationField, purchaseField, formStage));
+        saveButton.setOnAction(e -> {
+            if (computer == null) {
+                // Adicionar novo computador
+                Computer newComputer = new Computer(
+                        tagField.getText(),
+                        modelField.getText(),
+                        brandField.getText(),
+                        stateField.getText(),
+                        userField.getText(),
+                        serialField.getText(),
+                        windowsField.getText(),
+                        officeField.getText(),
+                        locationField.getText(),
+                        purchaseField.getText()
+                );
+                controller.addComputer(newComputer);
+            } else {
+                // Atualizar computador existente
+                Computer updatedComputer = new Computer(
+                        tagField.getText(),
+                        modelField.getText(),
+                        brandField.getText(),
+                        stateField.getText(),
+                        userField.getText(),
+                        serialField.getText(),
+                        windowsField.getText(),
+                        officeField.getText(),
+                        locationField.getText(),
+                        purchaseField.getText()
+                );
+                controller.editComputer(computer, updatedComputer);
+            }
+            formStage.close();
+        });
 
         // Adicionar botão ao layout
         gridPane.add(saveButton, 1, 10);
@@ -164,40 +315,6 @@ public class InventoryApp extends Application {
         }
 
         return gridPane;
-    }
-
-    // Salva o computador na lista (novo ou atualizado)
-    private void saveComputer(Computer computer, TextField tagField, TextField modelField, TextField brandField, TextField stateField, TextField userField, TextField serialField, TextField windowsField, TextField officeField, TextField locationField, TextField purchaseField, Stage stage) {
-        if (computer == null) {
-            // Criar novo computador
-            Computer newComputer = new Computer(
-                    tagField.getText(),
-                    modelField.getText(),
-                    brandField.getText(),
-                    stateField.getText(),
-                    userField.getText(),
-                    serialField.getText(),
-                    windowsField.getText(),
-                    officeField.getText(),
-                    locationField.getText(),
-                    purchaseField.getText()
-            );
-            computerList.add(newComputer);
-        } else {
-            // Atualizar computador existente
-            computer.setTag(tagField.getText());
-            computer.setModel(modelField.getText());
-            computer.setBrand(brandField.getText());
-            computer.setState(stateField.getText());
-            computer.setUserName(userField.getText());
-            computer.setSerialNumber(serialField.getText());
-            computer.setWindowsVersion(windowsField.getText());
-            computer.setOfficeVersion(officeField.getText());
-            computer.setLocation(locationField.getText());
-            computer.setPurchaseDate(purchaseField.getText());
-            table.refresh();  // Atualiza a tabela com os novos dados
-        }
-        stage.close();
     }
 
     // Exibe alertas
