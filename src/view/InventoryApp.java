@@ -84,53 +84,30 @@ public class InventoryApp extends Application {
         table.setEditable(true);
 
         // Criar todas as colunas
-        TableColumn<Computer, String> tagColumn = createTableColumn("Etiqueta TI", "tag", 100);
-        TableColumn<Computer, String> modelColumn = createTableColumn("Modelo", "model", 100);
-        TableColumn<Computer, String> brandColumn = createTableColumn("Marca", "brand", 100);
-        TableColumn<Computer, String> stateColumn = createTableColumn("Estado", "state", 100);
-        TableColumn<Computer, String> userColumn = createTableColumn("Usuário", "userName", 100);
-        TableColumn<Computer, String> serialColumn = createTableColumn("Número de Série", "serialNumber", 150);
-        TableColumn<Computer, String> windowsColumn = createTableColumn("Versão do Windows", "windowsVersion", 150);
-        TableColumn<Computer, String> officeColumn = createTableColumn("Versão do Office", "officeVersion", 150);
-        TableColumn<Computer, String> locationColumn = createTableColumn("Localização", "location", 150);
-        TableColumn<Computer, String> purchaseColumn = createTableColumn("Data de Compra", "purchaseDate", 120);
+        TableColumn<Computer, String> tagColumn = new TableColumn<>("Etiqueta TI");
+        TableColumn<Computer, String> modelColumn = new TableColumn<>("Modelo");
+        TableColumn<Computer, String> brandColumn = new TableColumn<>("Marca");
+        TableColumn<Computer, String> stateColumn = new TableColumn<>("Estado");
+        TableColumn<Computer, String> userColumn = new TableColumn<>("Usuário");
+        TableColumn<Computer, String> serialColumn = new TableColumn<>("Número de Série");
+        TableColumn<Computer, String> windowsColumn = new TableColumn<>("Versão do Windows");
+        TableColumn<Computer, String> officeColumn = new TableColumn<>("Versão do Office");
+        TableColumn<Computer, String> locationColumn = new TableColumn<>("Localização");
+        TableColumn<Computer, String> purchaseColumn = new TableColumn<>("Data de Compra");
 
-        // Configurar colunas para serem editáveis
-        tagColumn.setCellFactory(TextFieldTableCell.forTableColumn());
-        tagColumn.setOnEditCommit(event -> event.getRowValue().setTag(event.getNewValue()));
+        // Configurar as colunas para serem editáveis
+        tagColumn.setCellValueFactory(new PropertyValueFactory<>("tag"));
+        modelColumn.setCellValueFactory(new PropertyValueFactory<>("model"));
+        brandColumn.setCellValueFactory(new PropertyValueFactory<>("brand"));
+        stateColumn.setCellValueFactory(new PropertyValueFactory<>("state"));
+        userColumn.setCellValueFactory(new PropertyValueFactory<>("userName"));
+        serialColumn.setCellValueFactory(new PropertyValueFactory<>("serialNumber"));
+        windowsColumn.setCellValueFactory(new PropertyValueFactory<>("windowsVersion"));
+        officeColumn.setCellValueFactory(new PropertyValueFactory<>("officeVersion"));
+        locationColumn.setCellValueFactory(new PropertyValueFactory<>("location"));
+        purchaseColumn.setCellValueFactory(new PropertyValueFactory<>("purchaseDate"));
 
-        modelColumn.setCellFactory(TextFieldTableCell.forTableColumn());
-        modelColumn.setOnEditCommit(event -> event.getRowValue().setModel(event.getNewValue()));
-
-        brandColumn.setCellFactory(TextFieldTableCell.forTableColumn());
-        brandColumn.setOnEditCommit(event -> event.getRowValue().setBrand(event.getNewValue()));
-
-        stateColumn.setCellFactory(TextFieldTableCell.forTableColumn());
-        stateColumn.setOnEditCommit(event -> event.getRowValue().setState(event.getNewValue()));
-
-        userColumn.setCellFactory(TextFieldTableCell.forTableColumn());
-        userColumn.setOnEditCommit(event -> event.getRowValue().setUserName(event.getNewValue()));
-
-        serialColumn.setCellFactory(TextFieldTableCell.forTableColumn());
-        serialColumn.setOnEditCommit(event -> event.getRowValue().setSerialNumber(event.getNewValue()));
-
-        windowsColumn.setCellFactory(TextFieldTableCell.forTableColumn());
-        windowsColumn.setOnEditCommit(event -> event.getRowValue().setWindowsVersion(event.getNewValue()));
-
-        officeColumn.setCellFactory(TextFieldTableCell.forTableColumn());
-        officeColumn.setOnEditCommit(event -> event.getRowValue().setOfficeVersion(event.getNewValue()));
-
-        locationColumn.setCellFactory(TextFieldTableCell.forTableColumn());
-        locationColumn.setOnEditCommit(event -> event.getRowValue().setLocation(event.getNewValue()));
-
-        purchaseColumn.setCellFactory(TextFieldTableCell.forTableColumn());
-        purchaseColumn.setOnEditCommit(event -> event.getRowValue().setPurchaseDate(event.getNewValue()));
-
-        // Adicionar colunas à tabela
-        table.getColumns().addAll(tagColumn, modelColumn, brandColumn, stateColumn, userColumn, serialColumn, windowsColumn, officeColumn, locationColumn, purchaseColumn);
-        table.setItems(computerList);
-
-        // Configurar colunas para serem editáveis e adicionar ao histórico
+        // Configurar as colunas para serem editáveis
         tagColumn.setCellFactory(TextFieldTableCell.forTableColumn());
         tagColumn.setOnEditCommit(event -> {
             event.getRowValue().setTag(event.getNewValue());
@@ -191,8 +168,16 @@ public class InventoryApp extends Application {
             controller.addHistory("Editado", "admin", "Alterada a data de compra para " + event.getNewValue());
         });
 
+        // Adicionar colunas à tabela
+        table.getColumns().addAll(tagColumn, modelColumn, brandColumn, stateColumn, userColumn, serialColumn, windowsColumn, officeColumn, locationColumn, purchaseColumn);
 
+        // Permitir que as colunas sejam redimensionadas livremente
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+
+        // Preencher a tabela com os dados dos computadores
+        table.setItems(computerList);
     }
+
 
     // Método genérico para criar colunas de tabela
     private TableColumn<Computer, String> createTableColumn(String title, String property, int width) {
