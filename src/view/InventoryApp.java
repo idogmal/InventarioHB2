@@ -8,9 +8,11 @@ import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.control.TableView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.layout.BorderPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import model.Computer;
@@ -67,10 +69,13 @@ public class InventoryApp extends Application {
 
         // Layout dos botões
         HBox buttonLayout = new HBox(10, addButton, editButton, deleteButton, exportButton, backupButton, restoreButton, historyButton);
+        buttonLayout.setPadding(new Insets(10));
 
-        // Layout principal com a barra de busca
-        VBox layout = new VBox(10, searchField, table, buttonLayout);
-        layout.setPadding(new Insets(20));
+        // Layout principal com o BorderPane
+        BorderPane layout = new BorderPane();
+        layout.setTop(searchField);       // Barra de busca no topo
+        layout.setCenter(table);          // Tabela no centro
+        layout.setBottom(buttonLayout);   // Botões na parte inferior
 
         // Configurar a cena
         Scene scene = new Scene(layout, 900, 500);
@@ -172,7 +177,7 @@ public class InventoryApp extends Application {
         table.getColumns().addAll(tagColumn, modelColumn, brandColumn, stateColumn, userColumn, serialColumn, windowsColumn, officeColumn, locationColumn, purchaseColumn);
 
         // Permitir que as colunas sejam redimensionadas livremente
-        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        table.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
 
         // Preencher a tabela com os dados dos computadores
         table.setItems(computerList);
@@ -296,7 +301,8 @@ public class InventoryApp extends Application {
         if (file != null) {
             try {
                 controller.restoreData(file.getAbsolutePath());
-                table.refresh();
+                table.setItems(controller.getComputerList()); // Atualiza os dados da tabela
+                table.refresh(); // Força uma atualização visual
                 showAlert("Sucesso", "Dados restaurados com sucesso de " + file.getName());
             } catch (IOException ex) {
                 showAlert("Erro", "Falha ao restaurar os dados.");
@@ -304,6 +310,7 @@ public class InventoryApp extends Application {
             }
         }
     }
+
 
     // Abre o formulário de cadastro/edição
     private void openComputerForm(Computer computer) {

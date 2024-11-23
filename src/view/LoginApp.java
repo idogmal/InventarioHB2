@@ -2,9 +2,9 @@ package view;
 
 import controller.LoginController;
 import javafx.application.Application;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
@@ -20,13 +20,16 @@ public class LoginApp extends Application {
         // Campo de usuário
         TextField userNameField = new TextField();
         userNameField.setPromptText("Nome de usuário");
+        userNameField.setMaxWidth(200); // Define largura máxima
 
         // Campo de senha
         PasswordField passwordField = new PasswordField();
         passwordField.setPromptText("Senha");
+        passwordField.setMaxWidth(200); // Define largura máxima
 
         // Botão de login
         Button loginButton = new Button("Login");
+        loginButton.setPrefWidth(100); // Largura preferencial para o botão
 
         // Ação ao clicar no botão de login
         loginButton.setOnAction(e -> {
@@ -44,7 +47,9 @@ public class LoginApp extends Application {
 
         // Layout do formulário de login
         VBox layout = new VBox(10, userNameField, passwordField, loginButton);
-        layout.setSpacing(10);
+        layout.setAlignment(Pos.CENTER); // Centraliza os elementos
+        layout.setSpacing(10);           // Espaçamento entre os elementos
+        layout.setStyle("-fx-padding: 20;"); // Adiciona um padding externo
 
         // Definir a cena e a janela
         Scene scene = new Scene(layout, 300, 200);
@@ -55,7 +60,7 @@ public class LoginApp extends Application {
 
     // Função para exibir alertas
     private void showAlert(String title, String message) {
-        Alert alert = new Alert(AlertType.ERROR);
+        Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(message);
