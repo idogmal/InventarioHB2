@@ -12,28 +12,33 @@ public class Computer {
     private String location;      // Localização
     private String purchaseDate;  // Data de Compra
 
-    // Construtor
+    // Construtor padrão
+    public Computer() {}
+
+    // Construtor completo
     public Computer(String tag, String model, String brand, String state, String userName, String serialNumber,
                     String windowsVersion, String officeVersion, String location, String purchaseDate) {
-        this.tag = tag;
-        this.model = model;
-        this.brand = brand;
-        this.state = state;
-        this.userName = userName;
-        this.serialNumber = serialNumber;
-        this.windowsVersion = windowsVersion;
-        this.officeVersion = officeVersion;
-        this.location = location;
-        this.purchaseDate = purchaseDate;
+        setTag(tag);
+        setModel(model);
+        setBrand(brand);
+        setState(state);
+        setUserName(userName);
+        setSerialNumber(serialNumber);
+        setWindowsVersion(windowsVersion);
+        setOfficeVersion(officeVersion);
+        setLocation(location);
+        setPurchaseDate(purchaseDate);
     }
 
-
-    // Getters e Setters
+    // Getters e Setters com validações básicas
     public String getTag() {
         return tag;
     }
 
     public void setTag(String tag) {
+        if (tag == null || tag.trim().isEmpty()) {
+            throw new IllegalArgumentException("A etiqueta TI não pode ser nula ou vazia.");
+        }
         this.tag = tag;
     }
 
@@ -42,7 +47,7 @@ public class Computer {
     }
 
     public void setModel(String model) {
-        this.model = model;
+        this.model = model != null ? model : "N/A";
     }
 
     public String getBrand() {
@@ -50,7 +55,7 @@ public class Computer {
     }
 
     public void setBrand(String brand) {
-        this.brand = brand;
+        this.brand = brand != null ? brand : "N/A";
     }
 
     public String getState() {
@@ -58,7 +63,7 @@ public class Computer {
     }
 
     public void setState(String state) {
-        this.state = state;
+        this.state = state != null ? state : "N/A";
     }
 
     public String getUserName() {
@@ -66,6 +71,9 @@ public class Computer {
     }
 
     public void setUserName(String userName) {
+        if (userName == null || userName.trim().isEmpty()) {
+            throw new IllegalArgumentException("O nome do usuário não pode ser nulo ou vazio.");
+        }
         this.userName = userName;
     }
 
@@ -74,7 +82,7 @@ public class Computer {
     }
 
     public void setSerialNumber(String serialNumber) {
-        this.serialNumber = serialNumber;
+        this.serialNumber = serialNumber != null ? serialNumber : "N/A";
     }
 
     public String getWindowsVersion() {
@@ -82,7 +90,7 @@ public class Computer {
     }
 
     public void setWindowsVersion(String windowsVersion) {
-        this.windowsVersion = windowsVersion;
+        this.windowsVersion = windowsVersion != null ? windowsVersion : "N/A";
     }
 
     public String getOfficeVersion() {
@@ -90,7 +98,7 @@ public class Computer {
     }
 
     public void setOfficeVersion(String officeVersion) {
-        this.officeVersion = officeVersion;
+        this.officeVersion = officeVersion != null ? officeVersion : "N/A";
     }
 
     public String getLocation() {
@@ -98,7 +106,7 @@ public class Computer {
     }
 
     public void setLocation(String location) {
-        this.location = location;
+        this.location = location != null ? location : "N/A";
     }
 
     public String getPurchaseDate() {
@@ -106,6 +114,15 @@ public class Computer {
     }
 
     public void setPurchaseDate(String purchaseDate) {
-        this.purchaseDate = purchaseDate;
+        this.purchaseDate = purchaseDate != null ? purchaseDate : "N/A";
+    }
+
+    // Método toString para representação textual
+    @Override
+    public String toString() {
+        return String.format(
+                "Tag: %s, Modelo: %s, Marca: %s, Estado: %s, Usuário: %s, Serial: %s, Windows: %s, Office: %s, Localização: %s, Compra: %s",
+                tag, model, brand, state, userName, serialNumber, windowsVersion, officeVersion, location, purchaseDate
+        );
     }
 }

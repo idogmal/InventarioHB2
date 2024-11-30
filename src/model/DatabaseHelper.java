@@ -1,9 +1,6 @@
 package model;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.sql.*;
 
 public class DatabaseHelper {
     private static final String DB_URL = "jdbc:sqlite:computers.db";
@@ -19,7 +16,7 @@ public class DatabaseHelper {
     }
 
     public void createTable() {
-        String sql = "CREATE TABLE IF NOT EXISTS computers ("
+        String computerTableSQL = "CREATE TABLE IF NOT EXISTS computers ("
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT,"
                 + "tag TEXT,"
                 + "serial_number TEXT,"
@@ -32,9 +29,18 @@ public class DatabaseHelper {
                 + "location TEXT,"
                 + "purchase_date TEXT"
                 + ");";
+
+        String userTableSQL = "CREATE TABLE IF NOT EXISTS users ("
+                + "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                + "user_name TEXT UNIQUE NOT NULL,"
+                + "password TEXT NOT NULL"
+                + ");";
+
         try (Connection conn = connect();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.execute();
+             PreparedStatement computerStmt = conn.prepareStatement(computerTableSQL);
+             PreparedStatement userStmt = conn.prepareStatement(userTableSQL)) {
+            computerStmt.execute();
+            userStmt.execute();
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
@@ -57,6 +63,54 @@ public class DatabaseHelper {
             pstmt.executeUpdate();
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        }
+    }
+
+    // Método para inserir novo usuário
+    public boolean insertUser(String userName, String password) {
+        String sql = "INSERT INTO users(user_name, password) VALUES(?, ?)";
+        try (Connection conn = connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, userName);
+            pstmt.setString(2, password);
+            pstmt.executeUpdate();
+            return true; // Cadastro bem-sucedido
+        } catch (SQLException e) {
+            if (e.getMessage().contains("UNIQUE constraint failed")) {
+                System.out.println("Usuário já existe: " + userName);
+            } else {
+                System.out.println(e.getMessage());
+            }
+            return false; // Falha no cadastro
+        }
+    }
+
+    // Método para verificar se um usuário existe
+    public boolean isUserExists(String userName) {
+        String sql = "SELECT COUNT(*) FROM users WHERE user_name = ?";
+        try (Connection conn = connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, userName);
+            ResultSet rs = pstmt.executeQuery();
+            return rs.getInt(1) > 0; // Retorna true se o usuário existir
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            return false;
+        }
+    }
+
+    // Método para validar login
+    public boolean validateLogin(String userName, String password) {
+        String sql = "SELECT COUNT(*) FROM users WHERE user_name = ? AND password = ?";
+        try (Connection conn = connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, userName);
+            pstmt.setString(2, password);
+            ResultSet rs = pstmt.executeQuery();
+            return rs.getInt(1) > 0; // Retorna true se as credenciais forem válidas
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            return false;
         }
     }
 }
