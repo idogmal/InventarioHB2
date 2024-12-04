@@ -1,8 +1,9 @@
 package controller;
 
-import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.stage.Stage;
 import model.DatabaseHelper;
+import model.User;
 import view.InventoryApp;
 
 public class LoginController {
@@ -24,6 +25,11 @@ public class LoginController {
         return false;
     }
 
+    // Método para verificar se o usuário é administrador
+    public boolean isAdmin(String userName, String password) {
+        return dbHelper.validateLogin("admin", "admin") && "admin".equals(userName) && "admin".equals(password);
+    }
+
     // Método para cadastrar novo usuário
     public boolean registerUser(String userName, String password) {
         if (dbHelper.isUserExists(userName)) {
@@ -31,6 +37,32 @@ public class LoginController {
             return false; // Falha ao registrar
         }
         return dbHelper.insertUser(userName, password); // Tenta registrar
+    }
+
+    // Método para listar todos os usuários cadastrados
+    public ObservableList<User> getUsers() {
+        return dbHelper.getUsers(); // Usa o método do DatabaseHelper
+    }
+
+    // Método para excluir um usuário
+    public void deleteUser(String userName) {
+        if ("admin".equals(userName)) {
+            throw new IllegalArgumentException("O administrador não pode ser excluído.");
+        }
+        if (dbHelper.deleteUser(userName)) {
+            System.out.println("Usuário excluído: " + userName);
+        } else {
+            System.out.println("Erro ao excluir usuário: " + userName);
+        }
+    }
+
+    // Método para editar a senha de um usuário
+    public void editUserPassword(String userName, String newPassword) {
+        if (dbHelper.editUserPassword(userName, newPassword)) {
+            System.out.println("Senha alterada com sucesso para o usuário: " + userName);
+        } else {
+            System.out.println("Erro ao alterar senha para o usuário: " + userName);
+        }
     }
 
     // Método para abrir a tela do inventário
@@ -43,10 +75,11 @@ public class LoginController {
             InventoryApp inventoryApp = new InventoryApp();
 
             // Configurar o controlador do inventário com uma lista vazia
-            inventoryApp.setController(new InventoryController(FXCollections.observableArrayList()));
+            InventoryController inventoryController = new InventoryController();
+                inventoryApp.setController(inventoryController);
 
             // Definir o usuário logado no inventário
-            inventoryApp.setLoggedInUser(loggedInUser);
+            inventoryController.setCurrentUser(loggedInUser);
 
             // Abrir a tela do inventário
             inventoryApp.start(new Stage());

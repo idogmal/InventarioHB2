@@ -12,6 +12,9 @@ import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import model.Computer;
 import javafx.stage.FileChooser;
+import model.User;
+import javafx.scene.control.cell.PropertyValueFactory;
+
 import java.io.File;
 import java.io.IOException;
 
@@ -24,22 +27,21 @@ public class InventoryApp extends Application {
     @Override
     public void start(Stage primaryStage) {
         if (controller == null) {
-            initializeController(); // Garante a inicialização do controlador, caso ainda não tenha sido configurado
+            initializeController(); // Garante a inicialização do controlador
         }
 
         // Configurar a tabela usando a classe auxiliar TableSetup
         TableSetup tableSetup = new TableSetup(controller);
-        table = tableSetup.createTable(controller.getComputerList()); // Use a lista do controlador diretamente
+        table = tableSetup.createTable(controller.getComputerList());
 
         // Adicionar barra de busca
         TextField searchField = new TextField();
         searchField.setPromptText("Buscar por etiqueta, modelo, marca ou usuário");
 
         // Atualizar tabela com base na busca
-        searchField.textProperty().addListener((observable, oldValue, newValue) -> {
-            table.setItems(controller.searchComputers(newValue)); // Filtra os dados
-            table.refresh(); // Garante a atualização da tabela
-        });
+        searchField.textProperty().addListener((observable, oldValue, newValue) ->
+                table.setItems(controller.searchComputers(newValue))
+        );
 
         // Criar botões de ação
         Button addButton = new Button("Cadastrar");
@@ -49,6 +51,7 @@ public class InventoryApp extends Application {
         Button backupButton = new Button("Salvar");
         Button restoreButton = new Button("Restaurar");
         Button historyButton = new Button("Visualizar Histórico");
+        Button viewUsersButton = new Button("Visualizar Usuários"); // Novo botão
 
         // Adicionar ações aos botões
         addButton.setOnAction(e -> openComputerForm(null));
@@ -58,10 +61,11 @@ public class InventoryApp extends Application {
         backupButton.setOnAction(e -> handleBackupAction());
         restoreButton.setOnAction(e -> handleRestoreAction());
         historyButton.setOnAction(e -> openHistoryWindow());
+        viewUsersButton.setOnAction(e -> showUsersWindow()); // Ação do novo botão
 
         // Layout dos botões
         HBox buttonLayout = new HBox(10, addButton, editButton, deleteButton, exportButton,
-                backupButton, restoreButton, historyButton);
+                backupButton, restoreButton, historyButton, viewUsersButton);
         buttonLayout.setPadding(new Insets(10));
 
         // Layout principal com BorderPane
@@ -75,14 +79,11 @@ public class InventoryApp extends Application {
         primaryStage.setTitle("Inventário de Computadores");
         primaryStage.setScene(scene);
         primaryStage.show();
-
-        // Verificação de depuração
-        System.out.println("Lista inicial de computadores: " + controller.getComputerList());
     }
 
+
     private void initializeController() {
-        computerList = FXCollections.observableArrayList();
-        controller = new InventoryController(computerList); // Inicializa o controlador
+        controller = new InventoryController(); // Usa o construtor sem argumentos
     }
 
     // Novo método para definir o controlador de fora da classe
@@ -101,7 +102,6 @@ public class InventoryApp extends Application {
     private void openComputerForm(Computer computer) {
         ComputerFormHandler formHandler = new ComputerFormHandler(controller);
         formHandler.openForm(computer, controller.getCurrentUser());
-        table.refresh(); // Garante que a tabela seja atualizada após adicionar ou editar
     }
 
     // Ação para editar um computador
@@ -119,7 +119,6 @@ public class InventoryApp extends Application {
         Computer selectedComputer = table.getSelectionModel().getSelectedItem();
         if (selectedComputer != null) {
             controller.deleteComputer(selectedComputer, controller.getCurrentUser());
-            table.refresh(); // Atualiza a tabela após exclusão
         } else {
             showAlert("Seleção necessária", "Por favor, selecione um computador para excluir.");
         }
@@ -195,6 +194,34 @@ public class InventoryApp extends Application {
         alert.setContentText(message);
         alert.showAndWait();
     }
+
+    private void showUsersWindow() {
+        Stage userStage = new Stage();
+        userStage.setTitle("Usuários Cadastrados");
+
+        // Configurar a tabela de usuários
+        TableView<User> userTable = new TableView<>();
+        userTable.setItems(controller.getUsers());
+
+        TableColumn<User, String> usernameColumn = new TableColumn<>("Usuário");
+        usernameColumn.setCellValueFactory(new PropertyValueFactory<>("username"));
+
+        TableColumn<User, String> passwordColumn = new TableColumn<>("Senha");
+        passwordColumn.setCellValueFactory(new PropertyValueFactory<>("password"));
+
+        userTable.getColumns().addAll(usernameColumn, passwordColumn);
+
+        // Layout
+        BorderPane layout = new BorderPane();
+        layout.setCenter(userTable);
+        layout.setPadding(new Insets(10));
+
+        // Configurar a cena e mostrar
+        Scene scene = new Scene(layout, 400, 300);
+        userStage.setScene(scene);
+        userStage.show();
+    }
+
 
     public static void main(String[] args) {
         launch(args);
