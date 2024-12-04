@@ -35,6 +35,8 @@ public class ComputerFormHandler {
         // Preencher os campos se for edição
         if (computer != null) {
             populateFields(computer, tagField, modelField, brandField, stateField, userField, serialField, windowsField, officeField, locationField, purchaseField);
+        } else if (currentUser != null) {
+            userField.setText(currentUser); // Preencher automaticamente o usuário logado
         }
 
         // GridPane para o layout do formulário
@@ -43,6 +45,12 @@ public class ComputerFormHandler {
         // Botão de salvar
         Button saveButton = new Button("Salvar");
         saveButton.setOnAction(e -> {
+            // Validação dos campos obrigatórios
+            if (tagField.getText().trim().isEmpty() || userField.getText().trim().isEmpty()) {
+                showAlert("Erro", "Os campos 'Etiqueta TI' e 'Usuário' não podem estar vazios.");
+                return;
+            }
+
             if (computer == null) {
                 // Adicionar novo computador
                 Computer newComputer = new Computer(
@@ -58,6 +66,7 @@ public class ComputerFormHandler {
                         purchaseField.getText()
                 );
                 controller.addComputer(newComputer, currentUser);
+                System.out.println("Novo computador cadastrado: " + newComputer); // Depuração
             } else {
                 // Atualizar computador existente
                 Computer updatedComputer = new Computer(
@@ -73,6 +82,7 @@ public class ComputerFormHandler {
                         purchaseField.getText()
                 );
                 controller.editComputer(computer, updatedComputer, currentUser);
+                System.out.println("Computador atualizado: " + updatedComputer); // Depuração
             }
             formStage.close();
         });
@@ -113,5 +123,13 @@ public class ComputerFormHandler {
         }
 
         return gridPane;
+    }
+
+    private void showAlert(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 }

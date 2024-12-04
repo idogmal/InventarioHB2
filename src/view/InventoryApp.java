@@ -29,16 +29,17 @@ public class InventoryApp extends Application {
 
         // Configurar a tabela usando a classe auxiliar TableSetup
         TableSetup tableSetup = new TableSetup(controller);
-        table = tableSetup.createTable(computerList);
+        table = tableSetup.createTable(controller.getComputerList()); // Use a lista do controlador diretamente
 
         // Adicionar barra de busca
         TextField searchField = new TextField();
         searchField.setPromptText("Buscar por etiqueta, modelo, marca ou usuário");
 
         // Atualizar tabela com base na busca
-        searchField.textProperty().addListener((observable, oldValue, newValue) ->
-                table.setItems(controller.searchComputers(newValue))
-        );
+        searchField.textProperty().addListener((observable, oldValue, newValue) -> {
+            table.setItems(controller.searchComputers(newValue)); // Filtra os dados
+            table.refresh(); // Garante a atualização da tabela
+        });
 
         // Criar botões de ação
         Button addButton = new Button("Cadastrar");
@@ -74,6 +75,9 @@ public class InventoryApp extends Application {
         primaryStage.setTitle("Inventário de Computadores");
         primaryStage.setScene(scene);
         primaryStage.show();
+
+        // Verificação de depuração
+        System.out.println("Lista inicial de computadores: " + controller.getComputerList());
     }
 
     private void initializeController() {
@@ -97,6 +101,7 @@ public class InventoryApp extends Application {
     private void openComputerForm(Computer computer) {
         ComputerFormHandler formHandler = new ComputerFormHandler(controller);
         formHandler.openForm(computer, controller.getCurrentUser());
+        table.refresh(); // Garante que a tabela seja atualizada após adicionar ou editar
     }
 
     // Ação para editar um computador
@@ -114,6 +119,7 @@ public class InventoryApp extends Application {
         Computer selectedComputer = table.getSelectionModel().getSelectedItem();
         if (selectedComputer != null) {
             controller.deleteComputer(selectedComputer, controller.getCurrentUser());
+            table.refresh(); // Atualiza a tabela após exclusão
         } else {
             showAlert("Seleção necessária", "Por favor, selecione um computador para excluir.");
         }
