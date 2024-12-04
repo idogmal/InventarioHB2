@@ -5,7 +5,6 @@ import javafx.collections.ObservableList;
 import model.Computer;
 import model.HistoryEntry;
 import model.HistoryEntry.ActionType;
-import util.CSVExporter;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -17,11 +16,11 @@ public class InventoryController {
 
     private ObservableList<Computer> computerList;
     private ObservableList<HistoryEntry> historyList;
-    private String currentUser; // Adicionado para rastrear o usuário atual
+    private String currentUser;
 
     public InventoryController(ObservableList<Computer> computerList) {
         this.computerList = computerList;
-        this.historyList = FXCollections.observableArrayList(); // Inicializa a lista de histórico
+        this.historyList = FXCollections.observableArrayList();
     }
 
     public ObservableList<Computer> getComputerList() {
@@ -32,83 +31,48 @@ public class InventoryController {
         return historyList;
     }
 
-    // Métodos para gerenciar o usuário atual
     public String getCurrentUser() {
         return currentUser;
     }
 
     public void setCurrentUser(String currentUser) {
         this.currentUser = currentUser;
-        System.out.println("Usuário logado: " + currentUser); // Depuração
+        log("Usuário logado: " + currentUser);
     }
 
-    // Método para adicionar um computador
     public void addComputer(Computer computer, String user) {
-        if (user == null || user.isEmpty()) {
-            System.out.println("Erro: Tentativa de adicionar computador sem usuário válido.");
-            return;
+        if (isValidUser(user)) {
+            computerList.add(computer);
+            log("Computador adicionado: " + computer);
+            addHistory(ActionType.ADICIONAR, user, "Adicionado computador: " + computer.getTag());
         }
-        computerList.add(computer);
-        System.out.println("Computador adicionado: " + computer); // Depuração
-        addHistory(ActionType.ADICIONAR, user, "Adicionado computador: " + computer.getTag());
     }
 
-    // Método para editar um computador
     public void editComputer(Computer oldComputer, Computer updatedComputer, String user) {
-        if (user == null || user.isEmpty()) {
-            System.out.println("Erro: Tentativa de editar computador sem usuário válido.");
-            return;
-        }
-        int index = computerList.indexOf(oldComputer);
-        if (index >= 0) {
-            computerList.set(index, updatedComputer);
-            System.out.println("Computador editado: " + oldComputer + " -> " + updatedComputer); // Depuração
-            addHistory(ActionType.EDITAR, user, String.format("Editado computador [%s]", oldComputer.getTag()));
-        } else {
-            System.out.println("Erro: Computador para edição não encontrado."); // Depuração
+        if (isValidUser(user)) {
+            int index = computerList.indexOf(oldComputer);
+            if (index >= 0) {
+                computerList.set(index, updatedComputer);
+                log("Computador editado: " + oldComputer + " -> " + updatedComputer);
+                addHistory(ActionType.EDITAR, user, "Editado computador: " + oldComputer.getTag());
+            } else {
+                log("Erro: Computador para edição não encontrado.");
+            }
         }
     }
 
-    // Método para excluir um computador
     public void deleteComputer(Computer computer, String user) {
-        if (user == null || user.isEmpty()) {
-            System.out.println("Erro: Tentativa de excluir computador sem usuário válido.");
-            return;
+        if (isValidUser(user)) {
+            computerList.remove(computer);
+            log("Computador excluído: " + computer);
+            addHistory(ActionType.EXCLUIR, user, "Excluído computador: " + computer.getTag());
         }
-        computerList.remove(computer);
-        System.out.println("Computador excluído: " + computer); // Depuração
-        addHistory(ActionType.EXCLUIR, user, "Excluído computador: " + computer.getTag());
-    }
-
-    // Métodos de exportação e importação de dados
-    public void exportToCSV(String filePath) throws IOException {
-        StringBuilder sb = new StringBuilder();
-
-        // Adicionar cabeçalhos
-        sb.append("Etiqueta TI;Modelo;Marca;Estado;Usuário;Número de Série;Versão do Windows;Versão do Office;Localização;Data de Compra\n");
-
-        // Adicionar os dados dos computadores
-        for (Computer computer : computerList) {
-            sb.append(String.format("\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\"\n",
-                    computer.getTag(),
-                    computer.getModel(),
-                    computer.getBrand(),
-                    computer.getState(),
-                    computer.getUserName(),
-                    computer.getSerialNumber(),
-                    computer.getWindowsVersion(),
-                    computer.getOfficeVersion(),
-                    computer.getLocation(),
-                    computer.getPurchaseDate()
-            ));
-        }
-
-        Files.write(Paths.get(filePath), sb.toString().getBytes("UTF-8"));
-        System.out.println("Dados exportados para o arquivo: " + filePath); // Depuração
     }
 
     public ObservableList<Computer> searchComputers(String query) {
-        System.out.println("Consulta de busca: " + query); // Depuração
+        if (query == null || query.trim().isEmpty()) {
+            return computerList; // Retorna a lista completa se a consulta for vazia
+        }
         return computerList.filtered(computer ->
                 computer.getTag().toLowerCase().contains(query.toLowerCase()) ||
                         computer.getModel().toLowerCase().contains(query.toLowerCase()) ||
@@ -117,91 +81,102 @@ public class InventoryController {
         );
     }
 
-    // Backup e restauração
-    public void backupData(String filePath) throws IOException {
+    public void exportToCSV(String filePath) throws IOException {
         StringBuilder sb = new StringBuilder();
-        sb.append("INVENTARIO\n");
-        sb.append("Tag;Serial Number;Model;Brand;State;User Name;Windows Version;Office Version;Location;Purchase Date\n");
+        sb.append("Etiqueta TI;Modelo;Marca;Estado;Usuário;Número de Série;Versão do Windows;Versão do Office;Localização;Data de Compra\n");
 
         for (Computer computer : computerList) {
             sb.append(String.format("\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\"\n",
-                    computer.getTag(),
-                    computer.getSerialNumber(),
-                    computer.getModel(),
-                    computer.getBrand(),
-                    computer.getState(),
-                    computer.getUserName(),
-                    computer.getWindowsVersion(),
-                    computer.getOfficeVersion(),
-                    computer.getLocation(),
-                    computer.getPurchaseDate()
-            ));
+                    computer.getTag(), computer.getModel(), computer.getBrand(), computer.getState(),
+                    computer.getUserName(), computer.getSerialNumber(), computer.getWindowsVersion(),
+                    computer.getOfficeVersion(), computer.getLocation(), computer.getPurchaseDate()));
+        }
+
+        Files.write(Paths.get(filePath), sb.toString().getBytes("UTF-8"));
+        log("Dados exportados para o arquivo: " + filePath);
+    }
+
+    public void backupData(String filePath) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        sb.append("INVENTARIO\n");
+        sb.append("Etiqueta TI;Modelo;Marca;Estado;Usuário;Número de Série;Versão do Windows;Versão do Office;Localização;Data de Compra\n");
+
+        for (Computer computer : computerList) {
+            sb.append(String.format("\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\"\n",
+                    computer.getTag(), computer.getModel(), computer.getBrand(), computer.getState(),
+                    computer.getUserName(), computer.getSerialNumber(), computer.getWindowsVersion(),
+                    computer.getOfficeVersion(), computer.getLocation(), computer.getPurchaseDate()));
         }
 
         sb.append("\nHISTORICO\n");
         sb.append("Action;User;Timestamp;Description\n");
+
         for (HistoryEntry history : historyList) {
             sb.append(String.format("\"%s\";\"%s\";\"%s\";\"%s\"\n",
-                    history.getAction(), history.getUser(),
-                    history.getTimestamp(), history.getDescription()));
+                    history.getAction(), history.getUser(), history.getTimestamp(), history.getDescription()));
         }
 
         Files.write(Paths.get(filePath), sb.toString().getBytes("UTF-8"));
-        System.out.println("Backup realizado no arquivo: " + filePath); // Depuração
+        log("Backup realizado no arquivo: " + filePath);
     }
 
     public void restoreData(String filePath) throws IOException {
         List<String> lines = Files.readAllLines(Paths.get(filePath));
+        boolean isInventory = false, isHistory = false;
 
         computerList.clear();
         historyList.clear();
 
-        boolean isInventory = false;
-        boolean isHistory = false;
-
         for (String line : lines) {
-            if (line.equals("INVENTARIO")) {
+            if (line.equalsIgnoreCase("INVENTARIO")) {
                 isInventory = true;
                 isHistory = false;
-                continue;
-            }
-            if (line.equals("HISTORICO")) {
+            } else if (line.equalsIgnoreCase("HISTORICO")) {
                 isInventory = false;
                 isHistory = true;
-                continue;
-            }
-            if (line.isBlank() || line.startsWith("Tag") || line.startsWith("Action")) {
-                continue;
-            }
-
-            String[] data = line.split(";", -1);
-
-            if (isInventory) {
-                Computer computer = new Computer(
-                        data[0], data[1], data[2], data[3], data[4],
-                        data[5], data[6], data[7], data[8], data[9]
-                );
-                computerList.add(computer);
-            }
-
-            if (isHistory && data.length >= 4) {
-                try {
-                    ActionType actionType = ActionType.valueOf(data[0].toUpperCase());
-                    HistoryEntry history = new HistoryEntry(
-                            actionType, data[1], LocalDateTime.parse(data[2]), data[3]
-                    );
-                    historyList.add(history);
-                } catch (Exception e) {
-                    System.out.println("Erro ao restaurar histórico: " + line);
+            } else if (!line.isBlank() && !line.startsWith("Etiqueta") && !line.startsWith("Action")) {
+                if (isInventory) {
+                    computerList.add(parseComputer(line));
+                } else if (isHistory) {
+                    historyList.add(parseHistory(line));
                 }
             }
         }
+        log("Dados restaurados do arquivo: " + filePath);
+    }
 
-        System.out.println("Dados restaurados do arquivo: " + filePath); // Depuração
+    private Computer parseComputer(String line) {
+        String[] data = line.split(";", -1);
+        return new Computer(data[0].replace("\"", ""), data[1].replace("\"", ""), data[2].replace("\"", ""),
+                data[3].replace("\"", ""), data[4].replace("\"", ""), data[5].replace("\"", ""),
+                data[6].replace("\"", ""), data[7].replace("\"", ""), data[8].replace("\"", ""),
+                data[9].replace("\"", ""));
+    }
+
+    private HistoryEntry parseHistory(String line) {
+        String[] data = line.split(";", -1);
+        return new HistoryEntry(ActionType.valueOf(data[0].replace("\"", "").toUpperCase()),
+                data[1].replace("\"", ""), LocalDateTime.parse(data[2].replace("\"", "")),
+                data[3].replace("\"", ""));
     }
 
     public void addHistory(ActionType action, String user, String description) {
-        historyList.add(new HistoryEntry(action, user, description));
-        System.out.println("Histórico adicionado: " + action + " - " + description); // Depuração
+        if (historyList == null) {
+            historyList = FXCollections.observableArrayList();
+        }
+        historyList.add(new HistoryEntry(action, user, LocalDateTime.now(), description));
+        log("Histórico adicionado: " + action + " - " + description);
+    }
+
+    private boolean isValidUser(String user) {
+        if (user == null || user.isEmpty()) {
+            log("Erro: Operação sem usuário válido.");
+            return false;
+        }
+        return true;
+    }
+
+    private void log(String message) {
+        System.out.println(message);
     }
 }

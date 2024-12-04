@@ -48,7 +48,7 @@ public class TableSetup {
         column.setOnEditCommit(event -> {
             String newValue = event.getNewValue();
 
-            // Atualizar o valor na linha usando um switch (substituindo o método set)
+            // Atualizar o valor na linha usando um switch
             switch (property) {
                 case "tag":
                     event.getRowValue().setTag(newValue);
@@ -82,9 +82,13 @@ public class TableSetup {
                     break;
             }
 
-            // Adicionar histórico da alteração usando o enum ActionType.EDITAR
-            controller.addHistory(HistoryEntry.ActionType.EDITAR, controller.getCurrentUser(),
-                    String.format("%s alterado para %s", title, newValue));
+            // Verificar se o método `addHistory` está acessível
+            if (controller != null) {
+                controller.addHistory(HistoryEntry.ActionType.EDITAR, controller.getCurrentUser(),
+                        String.format("%s alterado para %s", title, newValue));
+            } else {
+                System.err.println("Erro: Controlador não inicializado.");
+            }
         });
         return column;
     }
