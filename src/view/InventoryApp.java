@@ -2,13 +2,13 @@ package view;
 
 import controller.InventoryController;
 import javafx.application.Application;
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import model.Computer;
 import javafx.stage.FileChooser;
@@ -33,6 +33,14 @@ public class InventoryApp extends Application {
         // Configurar a tabela usando a classe auxiliar TableSetup
         TableSetup tableSetup = new TableSetup(controller);
         table = tableSetup.createTable(controller.getComputerList());
+
+        // Adicionar contador de computadores
+        Label computerCountLabel = new Label();
+        computerCountLabel.setText("Total de Computadores: " + controller.getComputerCount());
+        computerCountLabel.setStyle("-fx-font-weight: bold;"); // Adiciona negrito ao texto
+        controller.getComputerList().addListener((javafx.collections.ListChangeListener<Computer>) change -> {
+            computerCountLabel.setText("Total de Computadores: " + controller.getComputerCount());
+        });
 
         // Adicionar barra de busca
         TextField searchField = new TextField();
@@ -68,11 +76,9 @@ public class InventoryApp extends Application {
                 backupButton, restoreButton, historyButton, viewUsersButton);
         buttonLayout.setPadding(new Insets(10));
 
-        // Layout principal com BorderPane
-        BorderPane layout = new BorderPane();
-        layout.setTop(searchField);
-        layout.setCenter(table);
-        layout.setBottom(buttonLayout);
+        // Layout principal com VBox
+        VBox layout = new VBox(10, computerCountLabel, searchField, table, buttonLayout);
+        layout.setPadding(new Insets(10));
 
         // Configurar a cena
         Scene scene = new Scene(layout, 900, 500);
@@ -80,7 +86,6 @@ public class InventoryApp extends Application {
         primaryStage.setScene(scene);
         primaryStage.show();
     }
-
 
     private void initializeController() {
         controller = new InventoryController(); // Usa o construtor sem argumentos
@@ -221,7 +226,6 @@ public class InventoryApp extends Application {
         userStage.setScene(scene);
         userStage.show();
     }
-
 
     public static void main(String[] args) {
         launch(args);

@@ -169,6 +169,10 @@ public class InventoryController {
         users.removeIf(user -> user.getUsername().equals(username) && !isAdmin(username, ADMIN_PASSWORD));
     }
 
+    public int getComputerCount() {
+        return computerList.size();
+    }
+
     private String formatCSV(Computer computer) {
         return String.format("\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\"",
                 computer.getTag(), computer.getModel(), computer.getBrand(), computer.getState(),
