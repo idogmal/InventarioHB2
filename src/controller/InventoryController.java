@@ -6,6 +6,8 @@ import model.Computer;
 import model.HistoryEntry;
 import model.HistoryEntry.ActionType;
 import model.User;
+import model.DatabaseHelper;
+
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -27,11 +29,19 @@ public class InventoryController {
         this.computerList = FXCollections.observableArrayList();
         this.historyList = FXCollections.observableArrayList();
         this.users = FXCollections.observableArrayList();
+        loadUsersFromDatabase();
         initializeAdminUser();
     }
 
+    private void loadUsersFromDatabase() {
+        DatabaseHelper dbHelper = new DatabaseHelper();
+        users.addAll(dbHelper.loadUsers());
+    }
+
     private void initializeAdminUser() {
-        users.add(new User(ADMIN_USERNAME, ADMIN_PASSWORD));
+        if (users.stream().noneMatch(user -> "admin".equals(user.getUsername()))) {
+            users.add(new User(ADMIN_USERNAME, ADMIN_PASSWORD));
+        }
     }
 
     public ObservableList<Computer> getComputerList() {
@@ -152,6 +162,8 @@ public class InventoryController {
     public void addUser(String username, String password) {
         if (users.stream().noneMatch(user -> user.getUsername().equals(username))) {
             users.add(new User(username, password));
+            DatabaseHelper dbHelper = new DatabaseHelper();
+            dbHelper.insertUser(username, password);
         } else {
             throw new IllegalArgumentException("Usuário já cadastrado.");
         }
@@ -167,6 +179,14 @@ public class InventoryController {
 
     public void deleteUser(String username) {
         users.removeIf(user -> user.getUsername().equals(username) && !isAdmin(username, ADMIN_PASSWORD));
+    }
+
+    public int getUserCount() {
+        return users.size();
+    }
+
+    public List<String> getUsernames() {
+        return users.stream().map(User::getUsername).toList();
     }
 
     public int getComputerCount() {

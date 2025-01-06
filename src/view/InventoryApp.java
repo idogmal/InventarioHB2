@@ -61,6 +61,20 @@ public class InventoryApp extends Application {
         Button historyButton = new Button("Visualizar Histórico");
         Button viewUsersButton = new Button("Visualizar Usuários"); // Novo botão
 
+        // Botão para detalhes dos usuários
+        Button userDetailsButton = new Button("Detalhes dos Usuários");
+        userDetailsButton.setOnAction(e -> {
+            UserDetailsWindow userDetailsWindow = new UserDetailsWindow(controller);
+            userDetailsWindow.show();
+        });
+
+        // Exibe o botão de detalhes dos usuários apenas para administradores
+        if (controller.isAdmin(controller.getCurrentUser(), "admin")) {
+            userDetailsButton.setVisible(true);
+        } else {
+            userDetailsButton.setVisible(false);
+        }
+
         // Adicionar ações aos botões
         addButton.setOnAction(e -> openComputerForm(null));
         editButton.setOnAction(e -> handleEditAction());
@@ -69,11 +83,10 @@ public class InventoryApp extends Application {
         backupButton.setOnAction(e -> handleBackupAction());
         restoreButton.setOnAction(e -> handleRestoreAction());
         historyButton.setOnAction(e -> openHistoryWindow());
-        viewUsersButton.setOnAction(e -> showUsersWindow()); // Ação do novo botão
 
         // Layout dos botões
         HBox buttonLayout = new HBox(10, addButton, editButton, deleteButton, exportButton,
-                backupButton, restoreButton, historyButton, viewUsersButton);
+                backupButton, restoreButton, historyButton, userDetailsButton);
         buttonLayout.setPadding(new Insets(10));
 
         // Layout principal com VBox
@@ -198,36 +211,5 @@ public class InventoryApp extends Application {
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
-    }
-
-    private void showUsersWindow() {
-        Stage userStage = new Stage();
-        userStage.setTitle("Usuários Cadastrados");
-
-        // Configurar a tabela de usuários
-        TableView<User> userTable = new TableView<>();
-        userTable.setItems(controller.getUsers());
-
-        TableColumn<User, String> usernameColumn = new TableColumn<>("Usuário");
-        usernameColumn.setCellValueFactory(new PropertyValueFactory<>("username"));
-
-        TableColumn<User, String> passwordColumn = new TableColumn<>("Senha");
-        passwordColumn.setCellValueFactory(new PropertyValueFactory<>("password"));
-
-        userTable.getColumns().addAll(usernameColumn, passwordColumn);
-
-        // Layout
-        BorderPane layout = new BorderPane();
-        layout.setCenter(userTable);
-        layout.setPadding(new Insets(10));
-
-        // Configurar a cena e mostrar
-        Scene scene = new Scene(layout, 400, 300);
-        userStage.setScene(scene);
-        userStage.show();
-    }
-
-    public static void main(String[] args) {
-        launch(args);
     }
 }

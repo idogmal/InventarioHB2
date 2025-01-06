@@ -89,17 +89,21 @@ public class DatabaseHelper {
         }
     }
 
-    public boolean isUserExists(String userName) {
-        String sql = "SELECT COUNT(*) FROM users WHERE user_name = ?";
+    public ObservableList<User> loadUsers() {
+        ObservableList<User> users = FXCollections.observableArrayList();
+        String sql = "SELECT user_name, password FROM users";
+
         try (Connection conn = connect();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, userName);
-            ResultSet rs = pstmt.executeQuery();
-            return rs.getInt(1) > 0;
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                users.add(new User(rs.getString("user_name"), rs.getString("password")));
+            }
         } catch (SQLException e) {
-            System.out.println("Erro ao verificar existência do usuário: " + e.getMessage());
-            return false;
+            System.out.println("Erro ao carregar usuários: " + e.getMessage());
         }
+
+        return users;
     }
 
     public boolean validateLogin(String userName, String password) {
@@ -141,6 +145,19 @@ public class DatabaseHelper {
             return rowsAffected > 0;
         } catch (SQLException e) {
             System.out.println("Erro ao alterar senha do usuário: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean isUserExists(String userName) {
+        String sql = "SELECT COUNT(*) FROM users WHERE user_name = ?";
+        try (Connection conn = connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, userName);
+            ResultSet rs = pstmt.executeQuery();
+            return rs.getInt(1) > 0;
+        } catch (SQLException e) {
+            System.out.println("Erro ao verificar existência do usuário: " + e.getMessage());
             return false;
         }
     }
