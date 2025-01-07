@@ -40,9 +40,7 @@ public class User {
 
     @Override
     public String toString() {
-        return "User{" +
-                "username='" + username + '\'' +
-                '}';
+        return username; // Retorna apenas o nome do usuário
     }
 
     @Override

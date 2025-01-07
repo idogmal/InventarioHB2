@@ -8,38 +8,34 @@ import model.HistoryEntry.ActionType;
 import model.User;
 import model.DatabaseHelper;
 
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 public class InventoryController {
 
     private final ObservableList<Computer> computerList;
     private final ObservableList<HistoryEntry> historyList;
     private final ObservableList<User> users;
+    private final DatabaseHelper dbHelper;
     private static final String ADMIN_USERNAME = "admin";
     private static final String ADMIN_PASSWORD = "admin";
     private String currentUser;
 
     public InventoryController() {
+        this.dbHelper = new DatabaseHelper();
+        this.dbHelper.createTable();
         this.computerList = FXCollections.observableArrayList();
         this.historyList = FXCollections.observableArrayList();
-        this.users = FXCollections.observableArrayList();
-        loadUsersFromDatabase();
+        this.users = dbHelper.loadUsers();
         initializeAdminUser();
-    }
-
-    private void loadUsersFromDatabase() {
-        DatabaseHelper dbHelper = new DatabaseHelper();
-        users.addAll(dbHelper.loadUsers());
     }
 
     private void initializeAdminUser() {
         if (users.stream().noneMatch(user -> "admin".equals(user.getUsername()))) {
+            dbHelper.insertUser(ADMIN_USERNAME, ADMIN_PASSWORD);
             users.add(new User(ADMIN_USERNAME, ADMIN_PASSWORD));
         }
     }
@@ -62,7 +58,6 @@ public class InventoryController {
 
     public void setCurrentUser(String currentUser) {
         this.currentUser = currentUser;
-        log("Usuário logado: " + currentUser);
     }
 
     public boolean authenticate(String username, String password) {
@@ -72,6 +67,46 @@ public class InventoryController {
 
     public boolean isAdmin(String username, String password) {
         return ADMIN_USERNAME.equals(username) && ADMIN_PASSWORD.equals(password);
+    }
+
+    public void addUser(String username, String password) {
+        if (!dbHelper.isUserExists(username)) {
+            dbHelper.insertUser(username, password);
+            users.add(new User(username, password));
+        } else {
+            throw new IllegalArgumentException("Usuário já cadastrado.");
+        }
+    }
+
+    public void editUserPassword(String username, String newPassword) {
+        if (dbHelper.editUserPassword(username, newPassword)) {
+            users.stream()
+                    .filter(user -> user.getUsername().equals(username))
+                    .findFirst()
+                    .ifPresent(user -> user.setPassword(newPassword));
+        } else {
+            throw new IllegalArgumentException("Erro ao alterar senha do usuário: " + username);
+        }
+    }
+
+    public void deleteUser(String username) {
+        if (dbHelper.deleteUser(username)) {
+            users.removeIf(user -> user.getUsername().equals(username));
+        } else {
+            throw new IllegalArgumentException("Erro ao excluir o usuário: " + username);
+        }
+    }
+
+    public int getUserCount() {
+        return users.size();
+    }
+
+    public List<String> getUsernames() {
+        return users.stream().map(User::getUsername).toList();
+    }
+
+    public int getComputerCount() {
+        return computerList.size();
     }
 
     public void addComputer(Computer computer, String user) {
@@ -159,38 +194,9 @@ public class InventoryController {
         log("Dados restaurados do arquivo: " + filePath);
     }
 
-    public void addUser(String username, String password) {
-        if (users.stream().noneMatch(user -> user.getUsername().equals(username))) {
-            users.add(new User(username, password));
-            DatabaseHelper dbHelper = new DatabaseHelper();
-            dbHelper.insertUser(username, password);
-        } else {
-            throw new IllegalArgumentException("Usuário já cadastrado.");
-        }
-    }
-
-    public void editUserPassword(String username, String newPassword) {
-        users.stream()
-                .filter(user -> user.getUsername().equals(username))
-                .findFirst()
-                .ifPresentOrElse(user -> user.setPassword(newPassword),
-                        () -> { throw new IllegalArgumentException("Usuário não encontrado."); });
-    }
-
-    public void deleteUser(String username) {
-        users.removeIf(user -> user.getUsername().equals(username) && !isAdmin(username, ADMIN_PASSWORD));
-    }
-
-    public int getUserCount() {
-        return users.size();
-    }
-
-    public List<String> getUsernames() {
-        return users.stream().map(User::getUsername).toList();
-    }
-
-    public int getComputerCount() {
-        return computerList.size();
+    public void addHistory(ActionType action, String user, String description) {
+        historyList.add(new HistoryEntry(action, user, LocalDateTime.now(), description));
+        log("Histórico adicionado: " + action + " - " + description);
     }
 
     private String formatCSV(Computer computer) {
@@ -218,11 +224,6 @@ public class InventoryController {
         return new HistoryEntry(ActionType.valueOf(data[0].replace("\"", "").toUpperCase()),
                 data[1].replace("\"", ""), LocalDateTime.parse(data[2].replace("\"", "")),
                 data[3].replace("\"", ""));
-    }
-
-    public void addHistory(ActionType action, String user, String description) {
-        historyList.add(new HistoryEntry(action, user, LocalDateTime.now(), description));
-        log("Histórico adicionado: " + action + " - " + description);
     }
 
     private boolean isValidUser(String user) {

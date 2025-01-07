@@ -1,6 +1,10 @@
 package controller;
 
 import javafx.collections.ObservableList;
+import javafx.scene.input.KeyCode;
+import javafx.scene.control.TextField;
+import javafx.scene.control.PasswordField;
+import javafx.scene.control.Button;
 import javafx.stage.Stage;
 import model.DatabaseHelper;
 import model.User;
@@ -76,7 +80,7 @@ public class LoginController {
 
             // Configurar o controlador do inventário com uma lista vazia
             InventoryController inventoryController = new InventoryController();
-                inventoryApp.setController(inventoryController);
+            inventoryApp.setController(inventoryController);
 
             // Definir o usuário logado no inventário
             inventoryController.setCurrentUser(loggedInUser);
@@ -86,6 +90,21 @@ public class LoginController {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    // Adicionar suporte à tecla Enter no login
+    public void enableEnterKeyLogin(TextField userField, PasswordField passwordField, Button loginButton) {
+        passwordField.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.ENTER) {
+                loginButton.fire();
+            }
+        });
+
+        userField.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.ENTER) {
+                passwordField.requestFocus();
+            }
+        });
     }
 
     // Método para obter o nome do usuário logado
