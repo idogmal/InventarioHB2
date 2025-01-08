@@ -14,6 +14,9 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * Classe InventoryController - Responsável pela lógica do inventário, histórico e gestão de usuários.
+ */
 public class InventoryController {
 
     private final ObservableList<Computer> computerList;
@@ -145,6 +148,10 @@ public class InventoryController {
                         computer.getModel().toLowerCase().contains(lowerQuery) ||
                         computer.getBrand().toLowerCase().contains(lowerQuery) ||
                         computer.getUserName().toLowerCase().contains(lowerQuery));
+    }
+
+    public ObservableList<Computer> getComputersByLocation(String location) {
+        return computerList.filtered(computer -> computer.getLocation().equalsIgnoreCase(location));
     }
 
     public void exportToCSV(String filePath) throws IOException {

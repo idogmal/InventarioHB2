@@ -31,8 +31,9 @@ public class LoginController {
 
     // Método para verificar se o usuário é administrador
     public boolean isAdmin(String userName, String password) {
-        return dbHelper.validateLogin("admin", "admin") && "admin".equals(userName) && "admin".equals(password);
+        return "admin".equals(userName) && "admin".equals(password);
     }
+
 
     // Método para cadastrar novo usuário
     public boolean registerUser(String userName, String password) {

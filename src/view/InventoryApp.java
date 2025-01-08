@@ -1,10 +1,10 @@
-
 package view;
 
 import controller.InventoryController;
 import javafx.application.Application;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
@@ -12,9 +12,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import model.Computer;
-import javafx.stage.FileChooser;
 import model.User;
-import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.stage.FileChooser;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,6 +38,9 @@ public class InventoryApp extends Application {
         // Configurar a tabela usando a classe auxiliar TableSetup
         TableSetup tableSetup = new TableSetup(controller);
         table = tableSetup.createTable(controller.getComputerList());
+
+        // Vincular o ObservableList à tabela
+        table.setItems(controller.getComputerList());
 
         // Adicionar contador de computadores
         Label computerCountLabel = new Label();
@@ -65,6 +67,32 @@ public class InventoryApp extends Application {
         Button historyButton = new Button("Visualizar Histórico");
         Button manageUsersButton = new Button("Gerenciar Usuários");
 
+        // Botão de voltar
+        Button backButton = new Button("⬅ Voltar");
+        backButton.setOnAction(e -> {
+            String currentUser = controller.getCurrentUser();
+            if (currentUser == null || currentUser.isEmpty()) {
+                showAlert("Erro", "Usuário atual não está definido. Não é possível voltar para a seleção de localidade.");
+                return;
+            }
+            primaryStage.close();
+            reopenLocationSelection(currentUser);
+        });
+
+
+
+
+
+        // Verificar se o usuário logado é admin
+        if ("admin".equals(controller.getCurrentUser())) {
+            manageUsersButton.setVisible(true);
+        } else {
+            manageUsersButton.setVisible(false);
+        }
+
+        // Ação do botão "Gerenciar Usuários"
+        manageUsersButton.setOnAction(e -> openUserManagementWindow());
+
         // Ações dos botões
         addButton.setOnAction(e -> openComputerForm(null));
         editButton.setOnAction(e -> handleEditAction());
@@ -73,26 +101,41 @@ public class InventoryApp extends Application {
         backupButton.setOnAction(e -> handleBackupAction());
         restoreButton.setOnAction(e -> handleRestoreAction());
         historyButton.setOnAction(e -> openHistoryWindow());
-        manageUsersButton.setOnAction(e -> {
-            UserManagementApp userManagementApp = new UserManagementApp(controller);
-            userManagementApp.showUserManagement(primaryStage);
-        });
 
         // Layout dos botões
         HBox buttonLayout = new HBox(10, addButton, editButton, deleteButton, exportButton,
                 backupButton, restoreButton, historyButton, manageUsersButton);
         buttonLayout.setPadding(new Insets(10));
 
-        // Layout principal da aplicação
-        VBox layout = new VBox(10, computerCountLabel, searchField, table, buttonLayout);
-        layout.setPadding(new Insets(10));
+        // Layout principal com VBox
+        VBox mainLayout = new VBox(10, backButton, computerCountLabel, searchField, table, buttonLayout);
+        mainLayout.setPadding(new Insets(10));
 
         // Configuração da cena
-        Scene scene = new Scene(layout, 900, 500);
+        Scene scene = new Scene(mainLayout, 900, 500);
         primaryStage.setTitle("Inventário de Computadores");
         primaryStage.setScene(scene);
         primaryStage.show();
     }
+
+    private void reopenLocationSelection(String currentUser) {
+        if (currentUser == null || currentUser.isEmpty()) {
+            System.out.println("Erro: Usuário atual é nulo ou vazio ao tentar reabrir a seleção de localidade.");
+            return; // Impede que o método continue se o usuário estiver inválido
+        }
+
+        LoginApp loginApp = new LoginApp();
+        try {
+            Stage locationStage = new Stage();
+            loginApp.showLocationSelection(locationStage, currentUser); // Passa o Stage e o usuário logado
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+
+
+
 
     /**
      * Inicializa o controlador principal.
@@ -111,15 +154,17 @@ public class InventoryApp extends Application {
     }
 
     /**
-     * Define o usuário logado no sistema.
+     * Define o filtro de localidade na tabela.
      *
-     * @param user Nome do usuário logado.
+     * @param location Localidade para filtrar (NPD ou INFAN).
      */
-    public void setLoggedInUser(String user) {
-        if (controller == null) {
-            throw new IllegalStateException("O controlador não foi inicializado antes de definir o usuário logado.");
+    public void setLocationFilter(String location) {
+        if (table == null) {
+            throw new IllegalStateException("A tabela não foi inicializada. Certifique-se de que o método start foi chamado.");
         }
-        controller.setCurrentUser(user);
+        ObservableList<Computer> filteredList = controller.getComputersByLocation(location);
+        table.setItems(filteredList); // Atualiza a tabela com os dados filtrados
+        table.refresh(); // Atualiza a exibição da tabela
     }
 
     /**
@@ -128,8 +173,15 @@ public class InventoryApp extends Application {
      * @param computer Computador a ser editado ou nulo para cadastrar um novo.
      */
     private void openComputerForm(Computer computer) {
+        String currentUser = controller.getCurrentUser(); // Obter o nome do usuário logado
+        if (currentUser == null || currentUser.isEmpty()) {
+            showAlert("Erro", "Nenhum usuário logado. Não é possível cadastrar computadores.");
+            return;
+        }
         ComputerFormHandler formHandler = new ComputerFormHandler(controller);
-        formHandler.openForm(computer, controller.getCurrentUser());
+        formHandler.openForm(computer, currentUser);
+        table.setItems(controller.getComputerList()); // Atualiza a tabela após cadastro
+        table.refresh();
     }
 
     /**
@@ -144,6 +196,7 @@ public class InventoryApp extends Application {
         }
     }
 
+
     /**
      * Ação para excluir um computador selecionado.
      */
@@ -151,10 +204,14 @@ public class InventoryApp extends Application {
         Computer selectedComputer = table.getSelectionModel().getSelectedItem();
         if (selectedComputer != null) {
             controller.deleteComputer(selectedComputer, controller.getCurrentUser());
+            table.setItems(controller.getComputerList()); // Atualiza a tabela após exclusão
+            table.refresh();
         } else {
             showAlert("Seleção necessária", "Por favor, selecione um computador para excluir.");
         }
     }
+
+    
 
     /**
      * Ação para exportar os dados da tabela para um arquivo CSV.
@@ -178,7 +235,7 @@ public class InventoryApp extends Application {
 
     /**
      * Ação para realizar o backup dos dados.
-     * */
+     */
     private void handleBackupAction() {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Salvar Backup");
@@ -224,6 +281,84 @@ public class InventoryApp extends Application {
     private void openHistoryWindow() {
         HistoryWindow historyWindow = new HistoryWindow(controller);
         historyWindow.showHistory();
+    }
+
+    /**
+     * Ação para abrir a janela de gerenciamento de usuários.
+     */
+    private void openUserManagementWindow() {
+        Stage userManagementStage = new Stage();
+        userManagementStage.setTitle("Gerenciar Usuários");
+
+        ListView<String> userList = new ListView<>();
+        userList.getItems().addAll(controller.getUsers().stream().map(User::getUsername).toList());
+
+        Button editPasswordButton = new Button("Editar Senha");
+        Button deleteUserButton = new Button("Excluir Usuário");
+
+        // Ação para editar a senha do usuário selecionado
+        editPasswordButton.setOnAction(e -> {
+            String selectedUser = userList.getSelectionModel().getSelectedItem();
+            if (selectedUser != null) {
+                openEditPasswordWindow(selectedUser);
+            } else {
+                showAlert("Erro", "Selecione um usuário.");
+            }
+        });
+
+        // Ação para excluir o usuário selecionado
+        deleteUserButton.setOnAction(e -> {
+            String selectedUser = userList.getSelectionModel().getSelectedItem();
+            if (selectedUser != null) {
+                controller.deleteUser(selectedUser);
+                userList.getItems().remove(selectedUser);
+                showAlert("Sucesso", "Usuário excluído com sucesso.");
+            } else {
+                showAlert("Erro", "Selecione um usuário.");
+            }
+        });
+
+        VBox layout = new VBox(10, userList, editPasswordButton, deleteUserButton);
+        layout.setAlignment(Pos.CENTER);
+        layout.setSpacing(10);
+        layout.setStyle("-fx-padding: 20;");
+
+        Scene scene = new Scene(layout, 300, 300);
+        userManagementStage.setScene(scene);
+        userManagementStage.show();
+    }
+
+    /**
+     * Abre a janela para editar a senha de um usuário.
+     */
+    private void openEditPasswordWindow(String username) {
+        Stage editPasswordStage = new Stage();
+        editPasswordStage.setTitle("Editar Senha");
+
+        PasswordField newPasswordField = new PasswordField();
+        newPasswordField.setPromptText("Nova Senha");
+
+        Button saveButton = new Button("Salvar");
+
+        saveButton.setOnAction(e -> {
+            String newPassword = newPasswordField.getText();
+            if (newPassword.isEmpty()) {
+                showAlert("Erro", "A senha não pode estar vazia.");
+            } else {
+                controller.editUserPassword(username, newPassword);
+                showAlert("Sucesso", "Senha atualizada com sucesso.");
+                editPasswordStage.close();
+            }
+        });
+
+        VBox layout = new VBox(10, newPasswordField, saveButton);
+        layout.setAlignment(Pos.CENTER);
+        layout.setSpacing(10);
+        layout.setStyle("-fx-padding: 20;");
+
+        Scene scene = new Scene(layout, 300, 150);
+        editPasswordStage.setScene(scene);
+        editPasswordStage.show();
     }
 
     /**

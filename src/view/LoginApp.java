@@ -1,7 +1,9 @@
 package view;
 
+import controller.InventoryController;
 import controller.LoginController;
 import javafx.application.Application;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -10,7 +12,7 @@ import javafx.stage.Stage;
 
 public class LoginApp extends Application {
 
-    private LoginController loginController = new LoginController(); // Instância do controlador
+    private final LoginController loginController = new LoginController(); // Instância do controlador
 
     @Override
     public void start(Stage primaryStage) {
@@ -45,13 +47,17 @@ public class LoginApp extends Application {
             if (loginController.login(userName, password)) {
                 if (loginController.isAdmin(userName, password)) {
                     manageUsersButton.setVisible(true);
+                    System.out.println("Usuário admin logado. Exibindo botão de gerenciar usuários.");
+                } else {
+                    manageUsersButton.setVisible(false);
+                    System.out.println("Usuário padrão logado. Botão de gerenciar usuários oculto.");
                 }
-                loginController.openInventoryScreen();
-                primaryStage.close(); // Fechar a janela de login
+                showLocationSelection(primaryStage, userName); // Atualizado para incluir o currentUser
             } else {
                 showAlert("Falha no Login", "Nome de usuário ou senha incorretos.");
             }
         });
+
 
         // Ação ao clicar no botão de cadastro
         registerButton.setOnAction(e -> openRegisterWindow());
@@ -72,7 +78,6 @@ public class LoginApp extends Application {
         primaryStage.show();
     }
 
-    // Abre a janela de cadastro de usuário
     private void openRegisterWindow() {
         Stage registerStage = new Stage();
         registerStage.setTitle("Cadastrar Usuário");
@@ -109,7 +114,6 @@ public class LoginApp extends Application {
         registerStage.show();
     }
 
-    // Abre a janela de gerenciamento de usuários
     private void openUserManagementWindow() {
         Stage userManagementStage = new Stage();
         userManagementStage.setTitle("Gerenciar Usuários");
@@ -152,7 +156,6 @@ public class LoginApp extends Application {
         userManagementStage.show();
     }
 
-    // Abre a janela para editar a senha de um usuário
     private void openEditPasswordWindow(String username) {
         Stage editPasswordStage = new Stage();
         editPasswordStage.setTitle("Editar Senha");
@@ -183,7 +186,50 @@ public class LoginApp extends Application {
         editPasswordStage.show();
     }
 
-    // Função para exibir alertas
+    public void showLocationSelection(Stage stage, String currentUser) {
+        System.out.println("showLocationSelection chamado com usuário: " + currentUser); // Log para depuração
+
+        stage.setTitle("Selecione o Local");
+
+        Button npdButton = new Button("NPD");
+        Button infanButton = new Button("INFAN");
+
+        npdButton.setOnAction(e -> {
+            openInventoryApp("NPD", currentUser); // Passa o currentUser
+            stage.close();
+        });
+
+        infanButton.setOnAction(e -> {
+            openInventoryApp("INFAN", currentUser); // Passa o currentUser
+            stage.close();
+        });
+
+        VBox layout = new VBox(10, npdButton, infanButton);
+        layout.setAlignment(Pos.CENTER);
+        layout.setPadding(new Insets(20));
+
+        Scene scene = new Scene(layout, 300, 200);
+        stage.setScene(scene);
+        stage.show();
+    }
+
+
+
+
+    private void openInventoryApp(String location, String currentUser) {
+        try {
+            InventoryApp inventoryApp = new InventoryApp();
+            InventoryController controller = new InventoryController();
+            controller.setCurrentUser(currentUser); // Define o usuário logado
+            inventoryApp.setController(controller);
+            Stage stage = new Stage();
+            inventoryApp.start(stage);
+            inventoryApp.setLocationFilter(location); // Aplica o filtro de localidade
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     private void showAlert(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(title);

@@ -1,44 +1,51 @@
 package model;
 
+/**
+ * Classe Computer representa um computador no sistema de inventário.
+ */
 public class Computer {
-    private String tag;           // Etiqueta TI
-    private String model;         // Modelo
-    private String brand;         // Marca
-    private String state;         // Estado do Computador (novo, usado, etc.)
-    private String userName;      // Nome do usuário
-    private String serialNumber;  // Número de Série
-    private String windowsVersion;// Versão do Windows
-    private String officeVersion; // Versão do Office
-    private String location;      // Localização
-    private String purchaseDate;  // Data de Compra
+    private String tag;
+    private String model;
+    private String brand;
+    private String state;
+    private String userName;
+    private String serialNumber;
+    private String windowsVersion;
+    private String officeVersion;
+    private String purchaseDate;
+    private String location; // Localidade do computador
 
-    // Construtor padrão
-    public Computer() {}
-
-    // Construtor completo
-    public Computer(String tag, String model, String brand, String state, String userName, String serialNumber,
-                    String windowsVersion, String officeVersion, String location, String purchaseDate) {
-        setTag(tag);
-        setModel(model);
-        setBrand(brand);
-        setState(state);
-        setUserName(userName);
-        setSerialNumber(serialNumber);
-        setWindowsVersion(windowsVersion);
-        setOfficeVersion(officeVersion);
-        setLocation(location);
-        setPurchaseDate(purchaseDate);
+    /**
+     * Construtor vazio para Computer.
+     */
+    public Computer() {
+        // Construtor vazio
     }
 
-    // Getters e Setters com validações básicas
+    /**
+     * Construtor completo para inicializar todos os campos.
+     */
+    public Computer(String tag, String model, String brand, String state, String userName,
+                    String serialNumber, String windowsVersion, String officeVersion, String purchaseDate, String location) {
+        this.tag = tag;
+        this.model = model;
+        this.brand = brand;
+        this.state = state;
+        this.userName = userName;
+        this.serialNumber = serialNumber;
+        this.windowsVersion = windowsVersion;
+        this.officeVersion = officeVersion;
+        this.purchaseDate = purchaseDate;
+        this.location = location != null ? location : "Desconhecido";
+    }
+
+    // Getters e Setters
+
     public String getTag() {
         return tag;
     }
 
     public void setTag(String tag) {
-        if (tag == null || tag.trim().isEmpty()) {
-            throw new IllegalArgumentException("A etiqueta TI não pode ser nula ou vazia.");
-        }
         this.tag = tag;
     }
 
@@ -47,7 +54,7 @@ public class Computer {
     }
 
     public void setModel(String model) {
-        this.model = model != null ? model : "N/A";
+        this.model = model;
     }
 
     public String getBrand() {
@@ -55,7 +62,7 @@ public class Computer {
     }
 
     public void setBrand(String brand) {
-        this.brand = brand != null ? brand : "N/A";
+        this.brand = brand;
     }
 
     public String getState() {
@@ -63,7 +70,7 @@ public class Computer {
     }
 
     public void setState(String state) {
-        this.state = state != null ? state : "N/A";
+        this.state = state;
     }
 
     public String getUserName() {
@@ -71,9 +78,6 @@ public class Computer {
     }
 
     public void setUserName(String userName) {
-        if (userName == null || userName.trim().isEmpty()) {
-            throw new IllegalArgumentException("O nome do usuário não pode ser nulo ou vazio.");
-        }
         this.userName = userName;
     }
 
@@ -82,7 +86,7 @@ public class Computer {
     }
 
     public void setSerialNumber(String serialNumber) {
-        this.serialNumber = serialNumber != null ? serialNumber : "N/A";
+        this.serialNumber = serialNumber;
     }
 
     public String getWindowsVersion() {
@@ -90,7 +94,7 @@ public class Computer {
     }
 
     public void setWindowsVersion(String windowsVersion) {
-        this.windowsVersion = windowsVersion != null ? windowsVersion : "N/A";
+        this.windowsVersion = windowsVersion;
     }
 
     public String getOfficeVersion() {
@@ -98,15 +102,7 @@ public class Computer {
     }
 
     public void setOfficeVersion(String officeVersion) {
-        this.officeVersion = officeVersion != null ? officeVersion : "N/A";
-    }
-
-    public String getLocation() {
-        return location;
-    }
-
-    public void setLocation(String location) {
-        this.location = location != null ? location : "N/A";
+        this.officeVersion = officeVersion;
     }
 
     public String getPurchaseDate() {
@@ -114,15 +110,30 @@ public class Computer {
     }
 
     public void setPurchaseDate(String purchaseDate) {
-        this.purchaseDate = purchaseDate != null ? purchaseDate : "N/A";
+        this.purchaseDate = purchaseDate;
     }
 
-    // Método toString para representação textual
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location != null ? location : "Desconhecido";
+    }
+
     @Override
     public String toString() {
-        return String.format(
-                "Tag: %s, Modelo: %s, Marca: %s, Estado: %s, Usuário: %s, Serial: %s, Windows: %s, Office: %s, Localização: %s, Compra: %s",
-                tag, model, brand, state, userName, serialNumber, windowsVersion, officeVersion, location, purchaseDate
-        );
+        return "Computer{" +
+                "tag='" + tag + '\'' +
+                ", model='" + model + '\'' +
+                ", brand='" + brand + '\'' +
+                ", state='" + state + '\'' +
+                ", userName='" + userName + '\'' +
+                ", serialNumber='" + serialNumber + '\'' +
+                ", windowsVersion='" + windowsVersion + '\'' +
+                ", officeVersion='" + officeVersion + '\'' +
+                ", purchaseDate='" + purchaseDate + '\'' +
+                ", location='" + location + '\'' +
+                '}';
     }
 }
