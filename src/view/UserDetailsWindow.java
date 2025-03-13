@@ -1,13 +1,10 @@
 package view;
 
 import controller.InventoryController;
-import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
-import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
-import javafx.geometry.Insets;
+
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import java.awt.*;
 
 public class UserDetailsWindow {
 
@@ -18,24 +15,38 @@ public class UserDetailsWindow {
     }
 
     public void show() {
+        // Verifica se o usuário atual é admin
         if (!controller.isAdmin(controller.getCurrentUser(), "admin")) {
-            Alert alert = new Alert(Alert.AlertType.ERROR, "Apenas o administrador pode acessar esta funcionalidade.");
-            alert.showAndWait();
+            JOptionPane.showMessageDialog(null, "Apenas o administrador pode acessar esta funcionalidade.",
+                    "Erro", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        Stage stage = new Stage();
-        stage.setTitle("Detalhes dos Usuários");
+        // Cria a janela principal
+        JFrame frame = new JFrame("Detalhes dos Usuários");
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.setSize(300, 400);
+        frame.setLocationRelativeTo(null);
 
-        Label userCountLabel = new Label("Total de Usuários: " + controller.getUserCount());
-        ListView<String> userListView = new ListView<>();
-        userListView.getItems().addAll(controller.getUsernames());
+        // Cria o label com o total de usuários
+        JLabel userCountLabel = new JLabel("Total de Usuários: " + controller.getUserCount());
 
-        VBox layout = new VBox(10, userCountLabel, userListView);
-        layout.setPadding(new Insets(10));
+        // Cria o JList para exibir os nomes dos usuários
+        // Supondo que controller.getUsernames() retorne uma List<String>
+        DefaultListModel<String> listModel = new DefaultListModel<>();
+        controller.getUsernames().forEach(listModel::addElement);
+        JList<String> userList = new JList<>(listModel);
+        JScrollPane scrollPane = new JScrollPane(userList);
 
-        Scene scene = new Scene(layout, 300, 400);
-        stage.setScene(scene);
-        stage.show();
+        // Organiza os componentes verticalmente usando BoxLayout
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBorder(new EmptyBorder(10, 10, 10, 10));
+        panel.add(userCountLabel);
+        panel.add(Box.createVerticalStrut(10));
+        panel.add(scrollPane);
+
+        frame.getContentPane().add(panel);
+        frame.setVisible(true);
     }
 }

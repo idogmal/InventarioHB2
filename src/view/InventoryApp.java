@@ -1,141 +1,167 @@
 package view;
 
 import controller.InventoryController;
-import javafx.application.Application;
-import javafx.collections.ObservableList;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.Scene;
-import javafx.scene.control.*;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
 import model.Computer;
 import model.User;
-import javafx.stage.FileChooser;
 
+import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.table.AbstractTableModel;
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
-/**
- * InventoryApp - Classe principal para a aplicação de inventário de computadores.
- * Responsável por gerenciar a interface gráfica e as interações do usuário.
- */
-public class InventoryApp extends Application {
+public class InventoryApp {
 
-    private TableView<Computer> table; // Tabela para exibir os computadores
-    private ObservableList<Computer> computerList; // Lista de computadores
+    private JTable table;                 // Tabela para exibir os computadores
+    private ComputerTableModel tableModel; // Modelo da tabela
     private InventoryController controller; // Controlador principal
+    private JLabel computerCountLabel;     // Label para contagem de computadores
+    private JTextField searchField;        // Campo de busca
 
-    @Override
-    public void start(Stage primaryStage) {
+    /**
+     * Método para iniciar a aplicação passando um JFrame já criado.
+     */
+    public void start(JFrame frame) {
         // Inicializar o controlador, caso não esteja definido
         if (controller == null) {
             initializeController();
         }
 
-        // Configurar a tabela usando a classe auxiliar TableSetup
-        TableSetup tableSetup = new TableSetup(controller);
-        table = tableSetup.createTable(controller.getComputerList());
+        // Criação do modelo e da tabela
+        tableModel = new ComputerTableModel(controller.getComputerList());
+        table = new JTable(tableModel);
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-        // Vincular o ObservableList à tabela
-        table.setItems(controller.getComputerList());
+        // Label de contagem de computadores
+        computerCountLabel = new JLabel();
+        updateComputerCountLabel();
 
-        // Adicionar contador de computadores
-        Label computerCountLabel = new Label();
-        computerCountLabel.setText("Total de Computadores: " + controller.getComputerCount());
-        computerCountLabel.setStyle("-fx-font-weight: bold;"); // Adiciona negrito ao texto
-        controller.getComputerList().addListener((javafx.collections.ListChangeListener<Computer>) change -> {
-            computerCountLabel.setText("Total de Computadores: " + controller.getComputerCount());
+        // Campo de busca com listener para atualizar a tabela ao digitar
+        searchField = new JTextField(30);
+        searchField.setToolTipText("Buscar por etiqueta, modelo, marca ou usuário");
+        searchField.getDocument().addDocumentListener(new DocumentListener() {
+            public void insertUpdate(DocumentEvent e) {
+                filterTable();
+            }
+            public void removeUpdate(DocumentEvent e) {
+                filterTable();
+            }
+            public void changedUpdate(DocumentEvent e) {
+                filterTable();
+            }
         });
-
-        // Barra de busca para filtrar a tabela
-        TextField searchField = new TextField();
-        searchField.setPromptText("Buscar por etiqueta, modelo, marca ou usuário");
-        searchField.textProperty().addListener((observable, oldValue, newValue) ->
-                table.setItems(controller.searchComputers(newValue))
-        );
 
         // Botões de ação
-        Button addButton = new Button("Cadastrar");
-        Button editButton = new Button("Editar");
-        Button deleteButton = new Button("Excluir");
-        Button exportButton = new Button("Exportar para CSV");
-        Button backupButton = new Button("Salvar");
-        Button restoreButton = new Button("Restaurar");
-        Button historyButton = new Button("Visualizar Histórico");
-        Button manageUsersButton = new Button("Gerenciar Usuários");
+        JButton addButton = new JButton("Cadastrar");
+        JButton editButton = new JButton("Editar");
+        JButton deleteButton = new JButton("Excluir");
+        JButton exportButton = new JButton("Exportar para CSV");
+        JButton backupButton = new JButton("Salvar");
+        JButton restoreButton = new JButton("Restaurar");
+        JButton historyButton = new JButton("Visualizar Histórico");
+        JButton manageUsersButton = new JButton("Gerenciar Usuários");
+        JButton backButton = new JButton("⬅ Voltar");
 
-        // Botão de voltar
-        Button backButton = new Button("⬅ Voltar");
-        backButton.setOnAction(e -> {
-            String currentUser = controller.getCurrentUser();
-            if (currentUser == null || currentUser.isEmpty()) {
-                showAlert("Erro", "Usuário atual não está definido. Não é possível voltar para a seleção de localidade.");
-                return;
-            }
-            primaryStage.close();
-            reopenLocationSelection(currentUser);
-        });
-
-
-
-
-
-        // Verificar se o usuário logado é admin
+        // Configurar visibilidade do botão de gerenciamento de usuários (apenas admin)
         if ("admin".equals(controller.getCurrentUser())) {
             manageUsersButton.setVisible(true);
         } else {
             manageUsersButton.setVisible(false);
         }
 
-        // Ação do botão "Gerenciar Usuários"
-        manageUsersButton.setOnAction(e -> openUserManagementWindow());
-
         // Ações dos botões
-        addButton.setOnAction(e -> openComputerForm(null));
-        editButton.setOnAction(e -> handleEditAction());
-        deleteButton.setOnAction(e -> handleDeleteAction());
-        exportButton.setOnAction(e -> handleExportAction());
-        backupButton.setOnAction(e -> handleBackupAction());
-        restoreButton.setOnAction(e -> handleRestoreAction());
-        historyButton.setOnAction(e -> openHistoryWindow());
+        addButton.addActionListener(e -> openComputerForm(null));
+        editButton.addActionListener(e -> handleEditAction());
+        deleteButton.addActionListener(e -> handleDeleteAction());
+        exportButton.addActionListener(e -> handleExportAction(frame));
+        backupButton.addActionListener(e -> handleBackupAction(frame));
+        restoreButton.addActionListener(e -> handleRestoreAction(frame));
+        historyButton.addActionListener(e -> openHistoryWindow());
+        manageUsersButton.addActionListener(e -> openUserManagementWindow());
+        backButton.addActionListener(e -> {
+            String currentUser = controller.getCurrentUser();
+            if (currentUser == null || currentUser.isEmpty()) {
+                showAlert("Erro", "Usuário atual não está definido. Não é possível voltar para a seleção de localidade.");
+                return;
+            }
+            frame.dispose();
+            reopenLocationSelection(currentUser);
+        });
 
-        // Layout dos botões
-        HBox buttonLayout = new HBox(10, addButton, editButton, deleteButton, exportButton,
-                backupButton, restoreButton, historyButton, manageUsersButton);
-        buttonLayout.setPadding(new Insets(10));
+        // Painel superior com o botão voltar, contador e campo de busca
+        JPanel topPanel = new JPanel();
+        topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.Y_AXIS));
+        backButton.setAlignmentX(Component.LEFT_ALIGNMENT);
+        computerCountLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        searchField.setMaximumSize(new Dimension(Integer.MAX_VALUE, searchField.getPreferredSize().height));
+        topPanel.add(backButton);
+        topPanel.add(Box.createVerticalStrut(10));
+        topPanel.add(computerCountLabel);
+        topPanel.add(Box.createVerticalStrut(10));
+        topPanel.add(searchField);
+        topPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        // Layout principal com VBox
-        VBox mainLayout = new VBox(10, backButton, computerCountLabel, searchField, table, buttonLayout);
-        mainLayout.setPadding(new Insets(10));
+        // Painel central com a tabela
+        JScrollPane tableScrollPane = new JScrollPane(table);
 
-        // Configuração da cena
-        Scene scene = new Scene(mainLayout, 900, 500);
-        primaryStage.setTitle("Inventário de Computadores");
-        primaryStage.setScene(scene);
-        primaryStage.show();
+        // Painel inferior com os botões de ação
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+        buttonPanel.add(addButton);
+        buttonPanel.add(editButton);
+        buttonPanel.add(deleteButton);
+        buttonPanel.add(exportButton);
+        buttonPanel.add(backupButton);
+        buttonPanel.add(restoreButton);
+        buttonPanel.add(historyButton);
+        buttonPanel.add(manageUsersButton);
+
+        // Layout principal
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.add(topPanel, BorderLayout.NORTH);
+        mainPanel.add(tableScrollPane, BorderLayout.CENTER);
+        mainPanel.add(buttonPanel, BorderLayout.SOUTH);
+
+        frame.setTitle("Inventário de Computadores");
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.getContentPane().add(mainPanel);
+        frame.setSize(900, 500);
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
     }
 
+    /**
+     * Atualiza o label com a contagem de computadores.
+     */
+    private void updateComputerCountLabel() {
+        computerCountLabel.setText("Total de Computadores: " + controller.getComputerCount());
+    }
+
+    /**
+     * Filtra a tabela conforme o texto digitado no campo de busca.
+     */
+    private void filterTable() {
+        String query = searchField.getText();
+        List<Computer> filteredList = controller.searchComputers(query);
+        tableModel.setComputers(filteredList);
+        updateComputerCountLabel();
+    }
+
+    /**
+     * Método para reabrir a seleção de local (chama o método da classe LoginApp).
+     */
     private void reopenLocationSelection(String currentUser) {
         if (currentUser == null || currentUser.isEmpty()) {
             System.out.println("Erro: Usuário atual é nulo ou vazio ao tentar reabrir a seleção de localidade.");
-            return; // Impede que o método continue se o usuário estiver inválido
+            return;
         }
-
+        // Reutiliza a implementação da classe LoginApp
         LoginApp loginApp = new LoginApp();
-        try {
-            Stage locationStage = new Stage();
-            loginApp.showLocationSelection(locationStage, currentUser); // Passa o Stage e o usuário logado
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+        loginApp.showLocationSelection(null, currentUser);
+
     }
-
-
-
-
 
     /**
      * Inicializa o controlador principal.
@@ -146,8 +172,6 @@ public class InventoryApp extends Application {
 
     /**
      * Define o controlador externo na aplicação.
-     *
-     * @param controller Controlador a ser usado.
      */
     public void setController(InventoryController controller) {
         this.controller = controller;
@@ -155,74 +179,67 @@ public class InventoryApp extends Application {
 
     /**
      * Define o filtro de localidade na tabela.
-     *
-     * @param location Localidade para filtrar (NPD ou INFAN).
      */
     public void setLocationFilter(String location) {
-        if (table == null) {
-            throw new IllegalStateException("A tabela não foi inicializada. Certifique-se de que o método start foi chamado.");
-        }
-        ObservableList<Computer> filteredList = controller.getComputersByLocation(location);
-        table.setItems(filteredList); // Atualiza a tabela com os dados filtrados
-        table.refresh(); // Atualiza a exibição da tabela
+        List<Computer> filteredList = controller.getComputersByLocation(location);
+        tableModel.setComputers(filteredList);
+        updateComputerCountLabel();
     }
 
     /**
      * Abre o formulário para cadastrar ou editar um computador.
-     *
-     * @param computer Computador a ser editado ou nulo para cadastrar um novo.
      */
     private void openComputerForm(Computer computer) {
-        String currentUser = controller.getCurrentUser(); // Obter o nome do usuário logado
+        String currentUser = controller.getCurrentUser();
         if (currentUser == null || currentUser.isEmpty()) {
             showAlert("Erro", "Nenhum usuário logado. Não é possível cadastrar computadores.");
             return;
         }
+        // Assume que ComputerFormHandler foi convertido para Swing
         ComputerFormHandler formHandler = new ComputerFormHandler(controller);
         formHandler.openForm(computer, currentUser);
-        table.setItems(controller.getComputerList()); // Atualiza a tabela após cadastro
-        table.refresh();
+        // Atualiza a tabela após cadastro
+        tableModel.setComputers(controller.getComputerList());
+        updateComputerCountLabel();
     }
 
     /**
      * Ação para editar um computador selecionado.
      */
     private void handleEditAction() {
-        Computer selectedComputer = table.getSelectionModel().getSelectedItem();
-        if (selectedComputer != null) {
+        int selectedRow = table.getSelectedRow();
+        if (selectedRow >= 0) {
+            Computer selectedComputer = tableModel.getComputerAt(selectedRow);
             openComputerForm(selectedComputer);
         } else {
             showAlert("Seleção necessária", "Por favor, selecione um computador para editar.");
         }
     }
 
-
     /**
      * Ação para excluir um computador selecionado.
      */
     private void handleDeleteAction() {
-        Computer selectedComputer = table.getSelectionModel().getSelectedItem();
-        if (selectedComputer != null) {
+        int selectedRow = table.getSelectedRow();
+        if (selectedRow >= 0) {
+            Computer selectedComputer = tableModel.getComputerAt(selectedRow);
             controller.deleteComputer(selectedComputer, controller.getCurrentUser());
-            table.setItems(controller.getComputerList()); // Atualiza a tabela após exclusão
-            table.refresh();
+            tableModel.setComputers(controller.getComputerList());
+            updateComputerCountLabel();
         } else {
             showAlert("Seleção necessária", "Por favor, selecione um computador para excluir.");
         }
     }
 
-    
-
     /**
      * Ação para exportar os dados da tabela para um arquivo CSV.
      */
-    private void handleExportAction() {
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Salvar arquivo CSV");
-        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
-        File file = fileChooser.showSaveDialog(table.getScene().getWindow());
-
-        if (file != null) {
+    private void handleExportAction(Component parent) {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Salvar arquivo CSV");
+        int userSelection = fileChooser.showSaveDialog(parent);
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            File file = fileChooser.getSelectedFile();
             try {
                 controller.exportToCSV(file.getAbsolutePath());
                 showAlert("Sucesso", "Dados exportados para " + file.getName());
@@ -236,13 +253,12 @@ public class InventoryApp extends Application {
     /**
      * Ação para realizar o backup dos dados.
      */
-    private void handleBackupAction() {
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Salvar Backup");
-        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
-        File file = fileChooser.showSaveDialog(table.getScene().getWindow());
-
-        if (file != null) {
+    private void handleBackupAction(Component parent) {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Salvar Backup");
+        int userSelection = fileChooser.showSaveDialog(parent);
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            File file = fileChooser.getSelectedFile();
             try {
                 controller.backupData(file.getAbsolutePath());
                 showAlert("Sucesso", "Backup realizado com sucesso em " + file.getName());
@@ -256,17 +272,16 @@ public class InventoryApp extends Application {
     /**
      * Ação para restaurar dados a partir de um backup.
      */
-    private void handleRestoreAction() {
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Restaurar Backup");
-        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
-        File file = fileChooser.showOpenDialog(table.getScene().getWindow());
-
-        if (file != null) {
+    private void handleRestoreAction(Component parent) {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Restaurar Backup");
+        int userSelection = fileChooser.showOpenDialog(parent);
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            File file = fileChooser.getSelectedFile();
             try {
                 controller.restoreData(file.getAbsolutePath());
-                table.setItems(controller.getComputerList()); // Atualiza a tabela
-                table.refresh();
+                tableModel.setComputers(controller.getComputerList());
+                updateComputerCountLabel();
                 showAlert("Sucesso", "Dados restaurados com sucesso de " + file.getName());
             } catch (IOException ex) {
                 showAlert("Erro", "Falha ao restaurar os dados.");
@@ -279,6 +294,7 @@ public class InventoryApp extends Application {
      * Ação para abrir a janela de histórico.
      */
     private void openHistoryWindow() {
+        // Assume que HistoryWindow foi convertido para Swing
         HistoryWindow historyWindow = new HistoryWindow(controller);
         historyWindow.showHistory();
     }
@@ -287,18 +303,24 @@ public class InventoryApp extends Application {
      * Ação para abrir a janela de gerenciamento de usuários.
      */
     private void openUserManagementWindow() {
-        Stage userManagementStage = new Stage();
-        userManagementStage.setTitle("Gerenciar Usuários");
+        // Recria uma janela similar à implementada no LoginApp
+        JFrame userManagementFrame = new JFrame("Gerenciar Usuários");
+        userManagementFrame.setSize(300, 300);
+        userManagementFrame.setLocationRelativeTo(null);
 
-        ListView<String> userList = new ListView<>();
-        userList.getItems().addAll(controller.getUsers().stream().map(User::getUsername).toList());
+        DefaultListModel<String> listModel = new DefaultListModel<>();
+        controller.getUsers().stream()
+                .map(User::getUsername)
+                .forEach(listModel::addElement);
+        JList<String> userList = new JList<>(listModel);
+        JScrollPane scrollPane = new JScrollPane(userList);
+        scrollPane.setPreferredSize(new Dimension(250, 150));
 
-        Button editPasswordButton = new Button("Editar Senha");
-        Button deleteUserButton = new Button("Excluir Usuário");
+        JButton editPasswordButton = new JButton("Editar Senha");
+        JButton deleteUserButton = new JButton("Excluir Usuário");
 
-        // Ação para editar a senha do usuário selecionado
-        editPasswordButton.setOnAction(e -> {
-            String selectedUser = userList.getSelectionModel().getSelectedItem();
+        editPasswordButton.addActionListener(e -> {
+            String selectedUser = userList.getSelectedValue();
             if (selectedUser != null) {
                 openEditPasswordWindow(selectedUser);
             } else {
@@ -306,72 +328,130 @@ public class InventoryApp extends Application {
             }
         });
 
-        // Ação para excluir o usuário selecionado
-        deleteUserButton.setOnAction(e -> {
-            String selectedUser = userList.getSelectionModel().getSelectedItem();
+        deleteUserButton.addActionListener(e -> {
+            String selectedUser = userList.getSelectedValue();
             if (selectedUser != null) {
                 controller.deleteUser(selectedUser);
-                userList.getItems().remove(selectedUser);
+                listModel.removeElement(selectedUser);
                 showAlert("Sucesso", "Usuário excluído com sucesso.");
             } else {
                 showAlert("Erro", "Selecione um usuário.");
             }
         });
 
-        VBox layout = new VBox(10, userList, editPasswordButton, deleteUserButton);
-        layout.setAlignment(Pos.CENTER);
-        layout.setSpacing(10);
-        layout.setStyle("-fx-padding: 20;");
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.add(scrollPane);
+        panel.add(Box.createVerticalStrut(10));
+        panel.add(editPasswordButton);
+        panel.add(Box.createVerticalStrut(10));
+        panel.add(deleteUserButton);
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        Scene scene = new Scene(layout, 300, 300);
-        userManagementStage.setScene(scene);
-        userManagementStage.show();
+        userManagementFrame.getContentPane().add(panel);
+        userManagementFrame.setVisible(true);
     }
 
     /**
      * Abre a janela para editar a senha de um usuário.
      */
     private void openEditPasswordWindow(String username) {
-        Stage editPasswordStage = new Stage();
-        editPasswordStage.setTitle("Editar Senha");
+        JFrame editPasswordFrame = new JFrame("Editar Senha");
+        editPasswordFrame.setSize(300, 150);
+        editPasswordFrame.setLocationRelativeTo(null);
 
-        PasswordField newPasswordField = new PasswordField();
-        newPasswordField.setPromptText("Nova Senha");
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        Button saveButton = new Button("Salvar");
+        JPasswordField newPasswordField = new JPasswordField(20);
+        JButton saveButton = new JButton("Salvar");
 
-        saveButton.setOnAction(e -> {
-            String newPassword = newPasswordField.getText();
+        panel.add(new JLabel("Nova Senha:"));
+        panel.add(newPasswordField);
+        panel.add(Box.createVerticalStrut(10));
+        panel.add(saveButton);
+
+        editPasswordFrame.getContentPane().add(panel);
+        editPasswordFrame.setVisible(true);
+
+        saveButton.addActionListener(e -> {
+            String newPassword = new String(newPasswordField.getPassword());
             if (newPassword.isEmpty()) {
                 showAlert("Erro", "A senha não pode estar vazia.");
             } else {
                 controller.editUserPassword(username, newPassword);
                 showAlert("Sucesso", "Senha atualizada com sucesso.");
-                editPasswordStage.close();
+                editPasswordFrame.dispose();
             }
         });
-
-        VBox layout = new VBox(10, newPasswordField, saveButton);
-        layout.setAlignment(Pos.CENTER);
-        layout.setSpacing(10);
-        layout.setStyle("-fx-padding: 20;");
-
-        Scene scene = new Scene(layout, 300, 150);
-        editPasswordStage.setScene(scene);
-        editPasswordStage.show();
     }
 
     /**
      * Exibe um alerta para o usuário.
-     *
-     * @param title   Título do alerta.
-     * @param message Mensagem do alerta.
      */
     private void showAlert(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+        JOptionPane.showMessageDialog(null, message, title, JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    /**
+     * Modelo da tabela para exibir os dados dos computadores.
+     */
+    private class ComputerTableModel extends AbstractTableModel {
+
+        private final String[] columnNames = {"Etiqueta TI", "Modelo", "Marca", "Estado", "Usuário", "Número de Série", "Versão do Windows", "Versão do Office", "Localização", "Data de Compra"};
+        private List<Computer> computers;
+
+        public ComputerTableModel(List<Computer> computers) {
+            this.computers = computers;
+        }
+
+        public void setComputers(List<Computer> computers) {
+            this.computers = computers;
+            fireTableDataChanged();
+        }
+
+        public Computer getComputerAt(int rowIndex) {
+            return computers.get(rowIndex);
+        }
+
+        @Override
+        public int getRowCount() {
+            return computers == null ? 0 : computers.size();
+        }
+
+        @Override
+        public int getColumnCount() {
+            return columnNames.length;
+        }
+
+        @Override
+        public String getColumnName(int column) {
+            return columnNames[column];
+        }
+
+        @Override
+        public Object getValueAt(int rowIndex, int columnIndex) {
+            Computer c = computers.get(rowIndex);
+            switch (columnIndex) {
+                case 0: return c.getTag();
+                case 1: return c.getModel();
+                case 2: return c.getBrand();
+                case 3: return c.getState();
+                case 4: return c.getUserName();
+                case 5: return c.getSerialNumber();
+                case 6: return c.getWindowsVersion();
+                case 7: return c.getOfficeVersion();
+                case 8: return c.getLocation();
+                case 9: return c.getPurchaseDate();
+                default: return "";
+            }
+        }
+
+        @Override
+        public boolean isCellEditable(int rowIndex, int columnIndex) {
+            // Se desejar permitir edição direta na tabela, retorne true para as colunas editáveis
+            return false;
+        }
     }
 }

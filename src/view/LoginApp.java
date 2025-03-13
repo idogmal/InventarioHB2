@@ -1,244 +1,243 @@
 package view;
 
-import controller.InventoryController;
 import controller.LoginController;
-import javafx.application.Application;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.Scene;
-import javafx.scene.control.*;
-import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
 
-public class LoginApp extends Application {
+public class LoginApp {
 
-    private final LoginController loginController = new LoginController(); // Instância do controlador
+    private final LoginController loginController = new LoginController();
 
-    @Override
-    public void start(Stage primaryStage) {
-        // Campo de usuário
-        TextField userNameField = new TextField();
-        userNameField.setPromptText("Nome de usuário");
-        userNameField.setMaxWidth(200); // Define largura máxima
-
-        // Campo de senha
-        PasswordField passwordField = new PasswordField();
-        passwordField.setPromptText("Senha");
-        passwordField.setMaxWidth(200); // Define largura máxima
-
-        // Botão de login
-        Button loginButton = new Button("Login");
-        loginButton.setPrefWidth(100); // Largura preferencial para o botão
-
-        // Botão de cadastro
-        Button registerButton = new Button("Cadastrar");
-        registerButton.setPrefWidth(100); // Largura preferencial para o botão
-
-        // Botão de gerenciamento de usuários (apenas para admin)
-        Button manageUsersButton = new Button("Gerenciar Usuários");
-        manageUsersButton.setPrefWidth(150);
-        manageUsersButton.setVisible(false); // Visível apenas após login como admin
-
-        // Ação ao clicar no botão de login
-        loginButton.setOnAction(e -> {
-            String userName = userNameField.getText();
-            String password = passwordField.getText();
-
-            if (loginController.login(userName, password)) {
-                if (loginController.isAdmin(userName, password)) {
-                    manageUsersButton.setVisible(true);
-                    System.out.println("Usuário admin logado. Exibindo botão de gerenciar usuários.");
-                } else {
-                    manageUsersButton.setVisible(false);
-                    System.out.println("Usuário padrão logado. Botão de gerenciar usuários oculto.");
-                }
-                showLocationSelection(primaryStage, userName); // Atualizado para incluir o currentUser
-            } else {
-                showAlert("Falha no Login", "Nome de usuário ou senha incorretos.");
-            }
-        });
-
-
-        // Ação ao clicar no botão de cadastro
-        registerButton.setOnAction(e -> openRegisterWindow());
-
-        // Ação ao clicar no botão de gerenciamento de usuários
-        manageUsersButton.setOnAction(e -> openUserManagementWindow());
-
-        // Layout do formulário de login
-        VBox layout = new VBox(10, userNameField, passwordField, loginButton, registerButton, manageUsersButton);
-        layout.setAlignment(Pos.CENTER);
-        layout.setSpacing(10);
-        layout.setStyle("-fx-padding: 20;");
-
-        // Configurar a cena e a janela
-        Scene scene = new Scene(layout, 300, 300);
-        primaryStage.setTitle("Login");
-        primaryStage.setScene(scene);
-        primaryStage.show();
+    public LoginApp() {
+        setLookAndFeel();
+        createAndShowGUI();
     }
 
-    private void openRegisterWindow() {
-        Stage registerStage = new Stage();
-        registerStage.setTitle("Cadastrar Usuário");
-
-        TextField userNameField = new TextField();
-        userNameField.setPromptText("Nome de usuário");
-
-        PasswordField passwordField = new PasswordField();
-        passwordField.setPromptText("Senha");
-
-        Button registerButton = new Button("Cadastrar");
-
-        registerButton.setOnAction(e -> {
-            String userName = userNameField.getText();
-            String password = passwordField.getText();
-
-            if (userName.isEmpty() || password.isEmpty()) {
-                showAlert("Erro", "Preencha todos os campos.");
-            } else if (loginController.registerUser(userName, password)) {
-                showAlert("Sucesso", "Usuário cadastrado com sucesso!");
-                registerStage.close();
-            } else {
-                showAlert("Erro", "Nome de usuário já existe.");
-            }
-        });
-
-        VBox layout = new VBox(10, userNameField, passwordField, registerButton);
-        layout.setAlignment(Pos.CENTER);
-        layout.setSpacing(10);
-        layout.setStyle("-fx-padding: 20;");
-
-        Scene scene = new Scene(layout, 300, 200);
-        registerStage.setScene(scene);
-        registerStage.show();
-    }
-
-    private void openUserManagementWindow() {
-        Stage userManagementStage = new Stage();
-        userManagementStage.setTitle("Gerenciar Usuários");
-
-        ListView<String> userList = new ListView<>();
-        userList.getItems().addAll(loginController.getUsers().stream().map(u -> u.getUsername()).toList());
-
-        Button editPasswordButton = new Button("Editar Senha");
-        Button deleteUserButton = new Button("Excluir Usuário");
-
-        // Ação para editar a senha do usuário selecionado
-        editPasswordButton.setOnAction(e -> {
-            String selectedUser = userList.getSelectionModel().getSelectedItem();
-            if (selectedUser != null) {
-                openEditPasswordWindow(selectedUser);
-            } else {
-                showAlert("Erro", "Selecione um usuário.");
-            }
-        });
-
-        // Ação para excluir o usuário selecionado
-        deleteUserButton.setOnAction(e -> {
-            String selectedUser = userList.getSelectionModel().getSelectedItem();
-            if (selectedUser != null) {
-                loginController.deleteUser(selectedUser);
-                userList.getItems().remove(selectedUser);
-                showAlert("Sucesso", "Usuário excluído com sucesso.");
-            } else {
-                showAlert("Erro", "Selecione um usuário.");
-            }
-        });
-
-        VBox layout = new VBox(10, userList, editPasswordButton, deleteUserButton);
-        layout.setAlignment(Pos.CENTER);
-        layout.setSpacing(10);
-        layout.setStyle("-fx-padding: 20;");
-
-        Scene scene = new Scene(layout, 300, 300);
-        userManagementStage.setScene(scene);
-        userManagementStage.show();
-    }
-
-    private void openEditPasswordWindow(String username) {
-        Stage editPasswordStage = new Stage();
-        editPasswordStage.setTitle("Editar Senha");
-
-        PasswordField newPasswordField = new PasswordField();
-        newPasswordField.setPromptText("Nova Senha");
-
-        Button saveButton = new Button("Salvar");
-
-        saveButton.setOnAction(e -> {
-            String newPassword = newPasswordField.getText();
-            if (newPassword.isEmpty()) {
-                showAlert("Erro", "A senha não pode estar vazia.");
-            } else {
-                loginController.editUserPassword(username, newPassword);
-                showAlert("Sucesso", "Senha atualizada com sucesso.");
-                editPasswordStage.close();
-            }
-        });
-
-        VBox layout = new VBox(10, newPasswordField, saveButton);
-        layout.setAlignment(Pos.CENTER);
-        layout.setSpacing(10);
-        layout.setStyle("-fx-padding: 20;");
-
-        Scene scene = new Scene(layout, 300, 150);
-        editPasswordStage.setScene(scene);
-        editPasswordStage.show();
-    }
-
-    public void showLocationSelection(Stage stage, String currentUser) {
-        System.out.println("showLocationSelection chamado com usuário: " + currentUser); // Log para depuração
-
-        stage.setTitle("Selecione o Local");
-
-        Button npdButton = new Button("NPD");
-        Button infanButton = new Button("INFAN");
-
-        npdButton.setOnAction(e -> {
-            openInventoryApp("NPD", currentUser); // Passa o currentUser
-            stage.close();
-        });
-
-        infanButton.setOnAction(e -> {
-            openInventoryApp("INFAN", currentUser); // Passa o currentUser
-            stage.close();
-        });
-
-        VBox layout = new VBox(10, npdButton, infanButton);
-        layout.setAlignment(Pos.CENTER);
-        layout.setPadding(new Insets(20));
-
-        Scene scene = new Scene(layout, 300, 200);
-        stage.setScene(scene);
-        stage.show();
-    }
-
-
-
-
-    private void openInventoryApp(String location, String currentUser) {
+    // Define o Nimbus LookAndFeel, se disponível
+    private void setLookAndFeel() {
         try {
-            InventoryApp inventoryApp = new InventoryApp();
-            InventoryController controller = new InventoryController();
-            controller.setCurrentUser(currentUser); // Define o usuário logado
-            inventoryApp.setController(controller);
-            Stage stage = new Stage();
-            inventoryApp.start(stage);
-            inventoryApp.setLocationFilter(location); // Aplica o filtro de localidade
+            for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) {
+                    UIManager.setLookAndFeel(info.getClassName());
+                    break;
+                }
+            }
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("Nimbus LookAndFeel não disponível, usando o padrão.");
         }
     }
 
+    private void createAndShowGUI() {
+        JFrame frame = new JFrame("Login");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        // Painel principal com BorderLayout e margens
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        // Painel superior: mensagem de boas-vindas
+        JLabel welcomeLabel = new JLabel("Bem-vindo ao Sistema de Inventário", SwingConstants.CENTER);
+        welcomeLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
+        welcomeLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0));
+        mainPanel.add(welcomeLabel, BorderLayout.NORTH);
+
+        // Painel central: campos de login
+        JPanel centerPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        // Label e campo "Nome de usuário"
+        JLabel userLabel = new JLabel("Nome de usuário:");
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 0; // label não expande
+        centerPanel.add(userLabel, gbc);
+
+        JTextField userNameField = new JTextField(20);
+        // Ajustar peso para expandir o campo de texto
+        gbc.gridx = 1;
+        gbc.weightx = 1.0;
+        centerPanel.add(userNameField, gbc);
+
+        // Label e campo "Senha"
+        JLabel passLabel = new JLabel("Senha:");
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.weightx = 0;
+        centerPanel.add(passLabel, gbc);
+
+        JPasswordField passwordField = new JPasswordField(20);
+        gbc.gridx = 1;
+        gbc.weightx = 1.0;
+        centerPanel.add(passwordField, gbc);
+
+        mainPanel.add(centerPanel, BorderLayout.CENTER);
+
+        // Painel inferior: botões
+        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
+        JButton loginButton = new JButton("Login");
+        JButton registerButton = new JButton("Cadastrar");
+        bottomPanel.add(loginButton);
+        bottomPanel.add(registerButton);
+        mainPanel.add(bottomPanel, BorderLayout.SOUTH);
+
+        frame.getContentPane().add(mainPanel);
+
+        // Deixe o layout calcular o tamanho ideal
+        frame.pack();
+        // Define um tamanho mínimo, caso queira garantir que não fique muito pequeno
+        frame.setMinimumSize(new Dimension(400, 300));
+
+        // Centraliza na tela
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+
+        // Ação do botão Login
+        loginButton.addActionListener(e -> {
+            String username = userNameField.getText();
+            String password = new String(passwordField.getPassword());
+            if (loginController.login(username, password)) {
+                JOptionPane.showMessageDialog(frame, "Login bem-sucedido!");
+                // Exibe a seleção de local
+                showLocationSelection(frame, username);
+            } else {
+                JOptionPane.showMessageDialog(frame, "Nome de usuário ou senha incorretos.",
+                        "Falha no Login", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        // Suporte à tecla Enter
+        passwordField.addKeyListener(new KeyAdapter(){
+            @Override
+            public void keyPressed(KeyEvent e){
+                if(e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    loginButton.doClick();
+                }
+            }
+        });
+
+        userNameField.addKeyListener(new KeyAdapter(){
+            @Override
+            public void keyPressed(KeyEvent e){
+                if(e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    passwordField.requestFocusInWindow();
+                }
+            }
+        });
+
+        // Ação do botão Cadastrar
+        registerButton.addActionListener(e -> openRegisterWindow());
+    }
+
+    // Janela modal para seleção de local
+    public void showLocationSelection(JFrame parentFrame, String currentUser) {
+        JDialog dialog = new JDialog(parentFrame, "Selecione o Local", true);
+        dialog.setSize(300, 200);
+        dialog.setLocationRelativeTo(parentFrame);
+
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        JButton npdButton = new JButton("NPD");
+        JButton infanButton = new JButton("INFAN");
+        npdButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        infanButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        panel.add(npdButton);
+        panel.add(Box.createVerticalStrut(10));
+        panel.add(infanButton);
+
+        dialog.getContentPane().add(panel);
+
+        npdButton.addActionListener(e -> {
+            openInventoryApp("NPD", currentUser);
+            dialog.dispose();
+        });
+
+        infanButton.addActionListener(e -> {
+            openInventoryApp("INFAN", currentUser);
+            dialog.dispose();
+        });
+
+        dialog.setVisible(true);
+    }
+
+    // Abre o inventário (aqui, apenas um placeholder)
+    private void openInventoryApp(String location, String currentUser) {
+        JOptionPane.showMessageDialog(null, "Abrindo inventário para " + location + " como " + currentUser);
+    }
+
+    // Janela de cadastro de usuário aprimorada
+    private void openRegisterWindow() {
+        JFrame registerFrame = new JFrame("Cadastrar Usuário");
+        registerFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        JLabel userLabel = new JLabel("Nome de usuário:");
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 0;
+        panel.add(userLabel, gbc);
+
+        JTextField userField = new JTextField(20);
+        gbc.gridx = 1;
+        gbc.weightx = 1.0;
+        panel.add(userField, gbc);
+
+        JLabel passLabel = new JLabel("Senha:");
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.weightx = 0;
+        panel.add(passLabel, gbc);
+
+        JPasswordField passField = new JPasswordField(20);
+        gbc.gridx = 1;
+        gbc.weightx = 1.0;
+        panel.add(passField, gbc);
+
+        JButton registerButton = new JButton("Cadastrar");
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.gridwidth = 2;
+        gbc.weightx = 0;
+        panel.add(registerButton, gbc);
+
+        registerFrame.getContentPane().add(panel);
+        registerFrame.pack();
+        registerFrame.setMinimumSize(new Dimension(350, 200));
+        registerFrame.setLocationRelativeTo(null);
+        registerFrame.setVisible(true);
+
+        registerButton.addActionListener(e -> {
+            String username = userField.getText();
+            String password = new String(passField.getPassword());
+            if (username.isEmpty() || password.isEmpty()) {
+                JOptionPane.showMessageDialog(registerFrame, "Preencha todos os campos.",
+                        "Erro", JOptionPane.ERROR_MESSAGE);
+            } else if (loginController.registerUser(username, password)) {
+                JOptionPane.showMessageDialog(registerFrame, "Usuário cadastrado com sucesso!",
+                        "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+                registerFrame.dispose();
+            } else {
+                JOptionPane.showMessageDialog(registerFrame, "Nome de usuário já existe.",
+                        "Erro", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+    }
+
     private void showAlert(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+        JOptionPane.showMessageDialog(null, message, title, JOptionPane.INFORMATION_MESSAGE);
     }
 
     public static void main(String[] args) {
-        launch(args);
+        SwingUtilities.invokeLater(LoginApp::new);
     }
 }

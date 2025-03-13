@@ -1,11 +1,8 @@
 package controller;
 
-import javafx.collections.ObservableList;
-import javafx.scene.input.KeyCode;
-import javafx.scene.control.TextField;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.Button;
-import javafx.stage.Stage;
+import javax.swing.*;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import model.DatabaseHelper;
 import model.User;
 import view.InventoryApp;
@@ -13,7 +10,7 @@ import view.InventoryApp;
 public class LoginController {
 
     private final DatabaseHelper dbHelper = new DatabaseHelper();
-    private String loggedInUser; // Atributo para armazenar o usuário logado
+    private String loggedInUser; // Armazena o usuário logado
 
     public LoginController() {
         // Garantir que a tabela de usuários está criada
@@ -34,7 +31,6 @@ public class LoginController {
         return "admin".equals(userName) && "admin".equals(password);
     }
 
-
     // Método para cadastrar novo usuário
     public boolean registerUser(String userName, String password) {
         if (dbHelper.isUserExists(userName)) {
@@ -45,8 +41,9 @@ public class LoginController {
     }
 
     // Método para listar todos os usuários cadastrados
-    public ObservableList<User> getUsers() {
-        return dbHelper.getUsers(); // Usa o método do DatabaseHelper
+    public java.util.List<User> getUsers() {
+        // Supondo que o método dbHelper.getUsers() retorne um List<User>
+        return dbHelper.getUsers();
     }
 
     // Método para excluir um usuário
@@ -70,7 +67,7 @@ public class LoginController {
         }
     }
 
-    // Método para abrir a tela do inventário
+    // Método para abrir a tela do inventário usando Swing
     public void openInventoryScreen() {
         if (loggedInUser == null) {
             throw new IllegalStateException("Nenhum usuário logado. Faça login antes de abrir a tela do inventário.");
@@ -78,32 +75,35 @@ public class LoginController {
 
         try {
             InventoryApp inventoryApp = new InventoryApp();
-
-            // Configurar o controlador do inventário com uma lista vazia
             InventoryController inventoryController = new InventoryController();
             inventoryApp.setController(inventoryController);
-
-            // Definir o usuário logado no inventário
             inventoryController.setCurrentUser(loggedInUser);
-
-            // Abrir a tela do inventário
-            inventoryApp.start(new Stage());
+            // Cria um JFrame para o inventário
+            JFrame frame = new JFrame("Inventário de Computadores");
+            frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+            inventoryApp.start(frame);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    // Adicionar suporte à tecla Enter no login
-    public void enableEnterKeyLogin(TextField userField, PasswordField passwordField, Button loginButton) {
-        passwordField.setOnKeyPressed(event -> {
-            if (event.getCode() == KeyCode.ENTER) {
-                loginButton.fire();
+    // Adicionar suporte à tecla Enter no login utilizando Swing
+    public void enableEnterKeyLogin(JTextField userField, JPasswordField passwordField, JButton loginButton) {
+        passwordField.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    loginButton.doClick();
+                }
             }
         });
 
-        userField.setOnKeyPressed(event -> {
-            if (event.getCode() == KeyCode.ENTER) {
-                passwordField.requestFocus();
+        userField.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    passwordField.requestFocusInWindow();
+                }
             }
         });
     }

@@ -1,10 +1,8 @@
-
 package model;
 
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Classe DatabaseHelper - Gerencia as operações do banco de dados para computadores e usuários.
@@ -114,8 +112,8 @@ public class DatabaseHelper {
      *
      * @return Lista de usuários.
      */
-    public ObservableList<User> getUsers() {
-        ObservableList<User> users = FXCollections.observableArrayList();
+    public List<User> getUsers() {
+        List<User> users = new ArrayList<>();
         String sql = "SELECT user_name, password FROM users";
         try (Connection conn = connect();
              PreparedStatement stmt = conn.prepareStatement(sql);
@@ -129,8 +127,8 @@ public class DatabaseHelper {
         return users;
     }
 
-    public ObservableList<User> loadUsers() {
-        ObservableList<User> users = FXCollections.observableArrayList();
+    public List<User> loadUsers() {
+        List<User> users = new ArrayList<>();
         String sql = "SELECT user_name, password FROM users";
         try (Connection conn = connect();
              PreparedStatement stmt = conn.prepareStatement(sql);
@@ -143,7 +141,6 @@ public class DatabaseHelper {
         }
         return users;
     }
-
 
     /**
      * Insere um novo usuário no banco de dados.

@@ -1,12 +1,10 @@
 package util;
 
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import model.Computer;
 import model.HistoryEntry;
 
 import java.io.*;
-import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 public class CSVExporter {
@@ -37,8 +35,8 @@ public class CSVExporter {
     }
 
     // Método para importar dados de um CSV
-    public static ObservableList<Computer> importFromCSV(String filePath) throws IOException {
-        ObservableList<Computer> computers = FXCollections.observableArrayList();
+    public static List<Computer> importFromCSV(String filePath) throws IOException {
+        List<Computer> computers = new ArrayList<>();
 
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
             String line;
@@ -95,6 +93,6 @@ public class CSVExporter {
 
     // Método para parsear uma linha de CSV
     private static String[] parseCSVLine(String line) {
-        return line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)", -1); // Suporta campos com aspas
+        return line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)", -1);
     }
 }

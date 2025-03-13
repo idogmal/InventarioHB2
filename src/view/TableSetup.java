@@ -1,13 +1,12 @@
 package view;
 
 import controller.InventoryController;
-import javafx.collections.ObservableList;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.control.cell.TextFieldTableCell;
 import model.Computer;
 import model.HistoryEntry;
+
+import javax.swing.*;
+import javax.swing.table.AbstractTableModel;
+import java.util.List;
 
 public class TableSetup {
 
@@ -17,79 +16,121 @@ public class TableSetup {
         this.controller = controller;
     }
 
-    public TableView<Computer> createTable(ObservableList<Computer> computerList) {
-        TableView<Computer> table = new TableView<>();
-        table.setEditable(true);
-        table.setItems(computerList);
-
-        // Criar todas as colunas
-        TableColumn<Computer, String> tagColumn = createColumn("Etiqueta TI", "tag");
-        TableColumn<Computer, String> modelColumn = createColumn("Modelo", "model");
-        TableColumn<Computer, String> brandColumn = createColumn("Marca", "brand");
-        TableColumn<Computer, String> stateColumn = createColumn("Estado", "state");
-        TableColumn<Computer, String> userColumn = createColumn("Usuário", "userName");
-        TableColumn<Computer, String> serialColumn = createColumn("Número de Série", "serialNumber");
-        TableColumn<Computer, String> windowsColumn = createColumn("Versão do Windows", "windowsVersion");
-        TableColumn<Computer, String> officeColumn = createColumn("Versão do Office", "officeVersion");
-        TableColumn<Computer, String> locationColumn = createColumn("Localização", "location");
-        TableColumn<Computer, String> purchaseColumn = createColumn("Data de Compra", "purchaseDate");
-
-        // Adicionar colunas à tabela
-        table.getColumns().addAll(tagColumn, modelColumn, brandColumn, stateColumn, userColumn,
-                serialColumn, windowsColumn, officeColumn, locationColumn, purchaseColumn);
-
+    /**
+     * Cria e retorna um JTable configurado com os dados dos computadores.
+     * @param computerList Lista de computadores a serem exibidos.
+     * @return JTable configurado.
+     */
+    public JTable createTable(List<Computer> computerList) {
+        ComputerTableModel model = new ComputerTableModel(computerList, controller);
+        JTable table = new JTable(model);
+        table.setAutoCreateRowSorter(true);
         return table;
     }
 
-    private TableColumn<Computer, String> createColumn(String title, String property) {
-        TableColumn<Computer, String> column = new TableColumn<>(title);
-        column.setCellValueFactory(new PropertyValueFactory<>(property));
-        column.setCellFactory(TextFieldTableCell.forTableColumn());
-        column.setOnEditCommit(event -> {
-            String newValue = event.getNewValue();
+    /**
+     * Modelo customizado da tabela que permite edição e atualiza o histórico.
+     */
+    private class ComputerTableModel extends AbstractTableModel {
 
-            // Atualizar o valor na linha usando um switch
-            switch (property) {
-                case "tag":
-                    event.getRowValue().setTag(newValue);
+        private final String[] columnNames = {"Etiqueta TI", "Modelo", "Marca", "Estado", "Usuário", "Número de Série", "Versão do Windows", "Versão do Office", "Localização", "Data de Compra"};
+        private List<Computer> computers;
+        private final InventoryController controller;
+
+        public ComputerTableModel(List<Computer> computers, InventoryController controller) {
+            this.computers = computers;
+            this.controller = controller;
+        }
+
+        @Override
+        public int getRowCount() {
+            return computers == null ? 0 : computers.size();
+        }
+
+        @Override
+        public int getColumnCount() {
+            return columnNames.length;
+        }
+
+        @Override
+        public String getColumnName(int column) {
+            return columnNames[column];
+        }
+
+        @Override
+        public Object getValueAt(int rowIndex, int columnIndex) {
+            Computer c = computers.get(rowIndex);
+            switch (columnIndex) {
+                case 0: return c.getTag();
+                case 1: return c.getModel();
+                case 2: return c.getBrand();
+                case 3: return c.getState();
+                case 4: return c.getUserName();
+                case 5: return c.getSerialNumber();
+                case 6: return c.getWindowsVersion();
+                case 7: return c.getOfficeVersion();
+                case 8: return c.getLocation();
+                case 9: return c.getPurchaseDate();
+                default: return "";
+            }
+        }
+
+        @Override
+        public boolean isCellEditable(int rowIndex, int columnIndex) {
+            // Permite edição de todas as células; ajuste conforme necessidade.
+            return true;
+        }
+
+        @Override
+        public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
+            Computer c = computers.get(rowIndex);
+            String newValue = aValue.toString();
+            String title = columnNames[columnIndex];
+            switch (columnIndex) {
+                case 0:
+                    c.setTag(newValue);
                     break;
-                case "model":
-                    event.getRowValue().setModel(newValue);
+                case 1:
+                    c.setModel(newValue);
                     break;
-                case "brand":
-                    event.getRowValue().setBrand(newValue);
+                case 2:
+                    c.setBrand(newValue);
                     break;
-                case "state":
-                    event.getRowValue().setState(newValue);
+                case 3:
+                    c.setState(newValue);
                     break;
-                case "userName":
-                    event.getRowValue().setUserName(newValue);
+                case 4:
+                    c.setUserName(newValue);
                     break;
-                case "serialNumber":
-                    event.getRowValue().setSerialNumber(newValue);
+                case 5:
+                    c.setSerialNumber(newValue);
                     break;
-                case "windowsVersion":
-                    event.getRowValue().setWindowsVersion(newValue);
+                case 6:
+                    c.setWindowsVersion(newValue);
                     break;
-                case "officeVersion":
-                    event.getRowValue().setOfficeVersion(newValue);
+                case 7:
+                    c.setOfficeVersion(newValue);
                     break;
-                case "location":
-                    event.getRowValue().setLocation(newValue);
+                case 8:
+                    c.setLocation(newValue);
                     break;
-                case "purchaseDate":
-                    event.getRowValue().setPurchaseDate(newValue);
+                case 9:
+                    c.setPurchaseDate(newValue);
                     break;
             }
-
-            // Verificar se o método `addHistory` está acessível
+            // Registra a alteração no histórico
             if (controller != null) {
                 controller.addHistory(HistoryEntry.ActionType.EDITAR, controller.getCurrentUser(),
                         String.format("%s alterado para %s", title, newValue));
             } else {
                 System.err.println("Erro: Controlador não inicializado.");
             }
-        });
-        return column;
+            fireTableCellUpdated(rowIndex, columnIndex);
+        }
+
+        public void setComputers(List<Computer> computers) {
+            this.computers = computers;
+            fireTableDataChanged();
+        }
     }
 }

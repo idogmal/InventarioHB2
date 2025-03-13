@@ -1,16 +1,11 @@
 package view;
 
 import controller.InventoryController;
-import javafx.collections.ObservableList;
-import javafx.geometry.Insets;
-import javafx.scene.Scene;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.stage.Stage;
 import model.HistoryEntry;
 
-import java.time.LocalDateTime;
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import java.awt.*;
 import java.time.format.DateTimeFormatter;
 
 public class HistoryWindow {
@@ -22,46 +17,31 @@ public class HistoryWindow {
     }
 
     public void showHistory() {
-        Stage historyStage = new Stage();
-        historyStage.setTitle("Histórico de Alterações");
+        JFrame historyFrame = new JFrame("Histórico de Alterações");
+        historyFrame.setSize(600, 400);
+        historyFrame.setLocationRelativeTo(null);
+        historyFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
-        TableView<HistoryEntry> historyTable = new TableView<>();
-        historyTable.setEditable(false);
+        String[] columnNames = {"Ação", "Usuário", "Data e Hora", "Descrição"};
+        DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
 
-        // Coluna: Ação
-        TableColumn<HistoryEntry, String> actionColumn = new TableColumn<>("Ação");
-        actionColumn.setCellValueFactory(new PropertyValueFactory<>("action"));
+        // Preencher o modelo com os dados do histórico
+        for (HistoryEntry entry : controller.getHistoryList()) {
+            String formattedTimestamp = entry.getTimestamp().format(formatter);
+            Object[] row = {entry.getAction(), entry.getUser(), formattedTimestamp, entry.getDescription()};
+            tableModel.addRow(row);
+        }
 
-        // Coluna: Usuário
-        TableColumn<HistoryEntry, String> userColumn = new TableColumn<>("Usuário");
-        userColumn.setCellValueFactory(new PropertyValueFactory<>("user"));
+        JTable historyTable = new JTable(tableModel);
+        historyTable.setFillsViewportHeight(true);
+        JScrollPane scrollPane = new JScrollPane(historyTable);
 
-        // Coluna: Data e Hora
-        TableColumn<HistoryEntry, String> timestampColumn = new TableColumn<>("Data e Hora");
-        timestampColumn.setCellValueFactory(cellData -> {
-            LocalDateTime timestamp = cellData.getValue().getTimestamp();
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
-            return new javafx.beans.property.SimpleStringProperty(timestamp.format(formatter));
-        });
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        panel.add(scrollPane, BorderLayout.CENTER);
 
-        // Coluna: Descrição
-        TableColumn<HistoryEntry, String> descriptionColumn = new TableColumn<>("Descrição");
-        descriptionColumn.setCellValueFactory(new PropertyValueFactory<>("description"));
-
-        // Adicionar colunas à tabela
-        historyTable.getColumns().addAll(actionColumn, userColumn, timestampColumn, descriptionColumn);
-
-        // Preencher a tabela com os dados do histórico
-        ObservableList<HistoryEntry> historyList = controller.getHistoryList();
-        historyTable.setItems(historyList);
-
-        // Configurar o layout
-        javafx.scene.layout.VBox layout = new javafx.scene.layout.VBox(10, historyTable);
-        layout.setPadding(new Insets(20));
-
-        // Configurar e mostrar a cena
-        Scene scene = new Scene(layout, 600, 400);
-        historyStage.setScene(scene);
-        historyStage.show();
+        historyFrame.getContentPane().add(panel);
+        historyFrame.setVisible(true);
     }
 }

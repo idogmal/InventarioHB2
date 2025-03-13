@@ -1,12 +1,10 @@
 package view;
 
 import controller.InventoryController;
-import javafx.geometry.Insets;
-import javafx.scene.Scene;
-import javafx.scene.control.*;
-import javafx.scene.layout.GridPane;
-import javafx.stage.Stage;
 import model.Computer;
+
+import javax.swing.*;
+import java.awt.*;
 
 public class ComputerFormHandler {
 
@@ -17,42 +15,65 @@ public class ComputerFormHandler {
     }
 
     public void openForm(Computer computer, String currentUser) {
-        Stage formStage = new Stage();
-        formStage.setTitle(computer == null ? "Cadastrar Computador" : "Editar Computador");
+        // Cria um JDialog modal
+        JDialog dialog = new JDialog((Frame) null, computer == null ? "Cadastrar Computador" : "Editar Computador", true);
+        dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+        dialog.setSize(400, 400);
+        dialog.setLocationRelativeTo(null);
 
-        // Campos do formulário
-        TextField tagField = new TextField();
-        TextField modelField = new TextField();
-        TextField brandField = new TextField();
-        TextField stateField = new TextField();
-        TextField userField = new TextField();
-        TextField serialField = new TextField();
-        TextField windowsField = new TextField();
-        TextField officeField = new TextField();
-        TextField locationField = new TextField();
-        TextField purchaseField = new TextField();
+        // Criação dos campos de formulário
+        JTextField tagField = new JTextField(20);
+        JTextField modelField = new JTextField(20);
+        JTextField brandField = new JTextField(20);
+        JTextField stateField = new JTextField(20);
+        JTextField userField = new JTextField(20);
+        JTextField serialField = new JTextField(20);
+        JTextField windowsField = new JTextField(20);
+        JTextField officeField = new JTextField(20);
+        JTextField locationField = new JTextField(20);
+        JTextField purchaseField = new JTextField(20);
 
-        // Preencher os campos se for edição
+        // Se for edição, preenche os campos com os dados do computador
         if (computer != null) {
-            populateFields(computer, tagField, modelField, brandField, stateField, userField, serialField, windowsField, officeField, locationField, purchaseField);
+            populateFields(computer, tagField, modelField, brandField, stateField, userField,
+                    serialField, windowsField, officeField, locationField, purchaseField);
         } else if (currentUser != null) {
-            userField.setText(currentUser); // Preencher automaticamente o usuário logado
+            userField.setText(currentUser); // Preenche automaticamente o campo usuário
         }
 
-        // GridPane para o layout do formulário
-        GridPane gridPane = createFormGrid(tagField, modelField, brandField, stateField, userField, serialField, windowsField, officeField, locationField, purchaseField);
+        // Cria um painel com GridLayout para os rótulos e campos
+        String[] labels = {"Etiqueta TI:", "Modelo:", "Marca:", "Estado:", "Usuário:", "Número de Série:",
+                "Versão do Windows:", "Versão do Office:", "Localização:", "Data de Compra:"};
+        JTextField[] fields = {tagField, modelField, brandField, stateField, userField, serialField,
+                windowsField, officeField, locationField, purchaseField};
+
+        JPanel formPanel = new JPanel(new GridLayout(10, 2, 10, 10));
+        formPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        for (int i = 0; i < labels.length; i++) {
+            formPanel.add(new JLabel(labels[i]));
+            formPanel.add(fields[i]);
+        }
 
         // Botão de salvar
-        Button saveButton = new Button("Salvar");
-        saveButton.setOnAction(e -> {
-            // Validação dos campos obrigatórios
+        JButton saveButton = new JButton("Salvar");
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(saveButton);
+
+        // Painel principal para agrupar o formulário e o botão
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.add(formPanel, BorderLayout.CENTER);
+        mainPanel.add(buttonPanel, BorderLayout.SOUTH);
+
+        dialog.getContentPane().add(mainPanel);
+
+        // Ação do botão salvar
+        saveButton.addActionListener(e -> {
             if (tagField.getText().trim().isEmpty() || userField.getText().trim().isEmpty()) {
                 showAlert("Erro", "Os campos 'Etiqueta TI' e 'Usuário' não podem estar vazios.");
                 return;
             }
-
             if (computer == null) {
-                // Adicionar novo computador
+                // Adiciona um novo computador
                 Computer newComputer = new Computer(
                         tagField.getText(),
                         modelField.getText(),
@@ -66,9 +87,9 @@ public class ComputerFormHandler {
                         purchaseField.getText()
                 );
                 controller.addComputer(newComputer, currentUser);
-                System.out.println("Novo computador cadastrado: " + newComputer); // Depuração
+                System.out.println("Novo computador cadastrado: " + newComputer);
             } else {
-                // Atualizar computador existente
+                // Atualiza o computador existente
                 Computer updatedComputer = new Computer(
                         tagField.getText(),
                         modelField.getText(),
@@ -82,21 +103,15 @@ public class ComputerFormHandler {
                         purchaseField.getText()
                 );
                 controller.editComputer(computer, updatedComputer, currentUser);
-                System.out.println("Computador atualizado: " + updatedComputer); // Depuração
+                System.out.println("Computador atualizado: " + updatedComputer);
             }
-            formStage.close();
+            dialog.dispose();
         });
 
-        // Adicionar botão ao layout
-        gridPane.add(saveButton, 1, 10);
-
-        // Configurar e mostrar a cena
-        Scene scene = new Scene(gridPane, 400, 400);
-        formStage.setScene(scene);
-        formStage.show();
+        dialog.setVisible(true);
     }
 
-    private void populateFields(Computer computer, TextField... fields) {
+    private void populateFields(Computer computer, JTextField... fields) {
         fields[0].setText(computer.getTag());
         fields[1].setText(computer.getModel());
         fields[2].setText(computer.getBrand());
@@ -109,27 +124,7 @@ public class ComputerFormHandler {
         fields[9].setText(computer.getPurchaseDate());
     }
 
-    private GridPane createFormGrid(TextField... fields) {
-        GridPane gridPane = new GridPane();
-        gridPane.setPadding(new Insets(10));
-        gridPane.setHgap(10);
-        gridPane.setVgap(10);
-
-        String[] labels = {"Etiqueta TI:", "Modelo:", "Marca:", "Estado:", "Usuário:", "Número de Série:", "Versão do Windows:", "Versão do Office:", "Localização:", "Data de Compra:"};
-
-        for (int i = 0; i < labels.length; i++) {
-            gridPane.add(new Label(labels[i]), 0, i);
-            gridPane.add(fields[i], 1, i);
-        }
-
-        return gridPane;
-    }
-
     private void showAlert(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+        JOptionPane.showMessageDialog(null, message, title, JOptionPane.ERROR_MESSAGE);
     }
 }

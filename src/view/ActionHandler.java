@@ -1,41 +1,34 @@
 package view;
 
 import controller.InventoryController;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.geometry.Insets;
-import javafx.scene.Scene;
-import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.layout.VBox;
-import javafx.stage.FileChooser;
-import javafx.stage.Stage;
 import model.Computer;
 import model.HistoryEntry;
 
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class ActionHandler {
 
     private final InventoryController controller;
-    private final TableView<Computer> table;
-    private final ComputerFormHandler formHandler; // Novo manipulador de formulários
+    private final JTable table;
+    private final ComputerFormHandler formHandler; // Versão Swing do manipulador de formulários
 
-    public ActionHandler(InventoryController controller, TableView<Computer> table) {
+    public ActionHandler(InventoryController controller, JTable table) {
         this.controller = controller;
         this.table = table;
-        this.formHandler = new ComputerFormHandler(controller); // Instância do manipulador de formulários
+        this.formHandler = new ComputerFormHandler(controller); // Assume que também foi convertido para Swing
     }
 
     public void handleExportAction() {
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Salvar arquivo CSV");
-        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
-        File file = fileChooser.showSaveDialog(table.getScene().getWindow());
-
-        if (file != null) {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Salvar arquivo CSV");
+        int userSelection = fileChooser.showSaveDialog(table);
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            File file = fileChooser.getSelectedFile();
             try {
                 controller.exportToCSV(file.getAbsolutePath());
                 showAlert("Sucesso", "Dados exportados para " + file.getName());
@@ -47,9 +40,10 @@ public class ActionHandler {
     }
 
     public void handleEditAction() {
-        Computer selectedComputer = table.getSelectionModel().getSelectedItem();
-        if (selectedComputer != null) {
-            // Use o ComputerFormHandler para abrir o formulário
+        int selectedRow = table.getSelectedRow();
+        if (selectedRow != -1) {
+            // Assume que o modelo da tabela possui o método getComputerAt(int)
+            Computer selectedComputer = ((ComputerTableModel) table.getModel()).getComputerAt(selectedRow);
             formHandler.openForm(selectedComputer, controller.getCurrentUser());
         } else {
             showAlert("Seleção necessária", "Por favor, selecione um computador para editar.");
@@ -57,44 +51,35 @@ public class ActionHandler {
     }
 
     public void openHistoryWindow() {
-        Stage historyStage = new Stage();
-        historyStage.setTitle("Histórico de Alterações");
+        JFrame historyFrame = new JFrame("Histórico de Alterações");
+        historyFrame.setSize(600, 400);
+        historyFrame.setLocationRelativeTo(null);
 
-        TableView<HistoryEntry> historyTable = new TableView<>();
-        historyTable.setEditable(false);
-
-        // Colunas para a tabela de histórico
-        TableColumn<HistoryEntry, String> actionColumn = new TableColumn<>("Ação");
-        actionColumn.setCellValueFactory(new PropertyValueFactory<>("action"));
-
-        TableColumn<HistoryEntry, String> userColumn = new TableColumn<>("Usuário");
-        userColumn.setCellValueFactory(new PropertyValueFactory<>("user"));
-
-        TableColumn<HistoryEntry, String> timestampColumn = new TableColumn<>("Data e Hora");
+        String[] columnNames = {"Ação", "Usuário", "Data e Hora", "Descrição"};
+        DefaultTableModel model = new DefaultTableModel(columnNames, 0);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
 
-        timestampColumn.setCellValueFactory(cellData -> {
-            LocalDateTime timestamp = cellData.getValue().getTimestamp();
-            return new SimpleStringProperty(timestamp.format(formatter));
-        });
+        for (HistoryEntry entry : controller.getHistoryList()) {
+            String formattedTimestamp = entry.getTimestamp().format(formatter);
+            Object[] row = {entry.getAction(), entry.getUser(), formattedTimestamp, entry.getDescription()};
+            model.addRow(row);
+        }
 
-        TableColumn<HistoryEntry, String> descriptionColumn = new TableColumn<>("Descrição");
-        descriptionColumn.setCellValueFactory(new PropertyValueFactory<>("description"));
+        JTable historyTable = new JTable(model);
+        JScrollPane scrollPane = new JScrollPane(historyTable);
 
-        historyTable.getColumns().addAll(actionColumn, userColumn, timestampColumn, descriptionColumn);
-        historyTable.setItems(controller.getHistoryList());
+        JPanel layout = new JPanel(new BorderLayout());
+        layout.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        layout.add(scrollPane, BorderLayout.CENTER);
 
-        VBox layout = new VBox(10, historyTable);
-        layout.setPadding(new Insets(20));
-
-        Scene scene = new Scene(layout, 600, 400);
-        historyStage.setScene(scene);
-        historyStage.show();
+        historyFrame.getContentPane().add(layout);
+        historyFrame.setVisible(true);
     }
 
     public void handleDeleteAction() {
-        Computer selectedComputer = table.getSelectionModel().getSelectedItem();
-        if (selectedComputer != null) {
+        int selectedRow = table.getSelectedRow();
+        if (selectedRow != -1) {
+            Computer selectedComputer = ((ComputerTableModel) table.getModel()).getComputerAt(selectedRow);
             controller.deleteComputer(selectedComputer, controller.getCurrentUser());
         } else {
             showAlert("Seleção necessária", "Por favor, selecione um computador para excluir.");
@@ -102,12 +87,11 @@ public class ActionHandler {
     }
 
     public void handleBackupAction() {
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Salvar Backup");
-        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
-        File file = fileChooser.showSaveDialog(table.getScene().getWindow());
-
-        if (file != null) {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Salvar Backup");
+        int userSelection = fileChooser.showSaveDialog(table);
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            File file = fileChooser.getSelectedFile();
             try {
                 controller.backupData(file.getAbsolutePath());
                 showAlert("Sucesso", "Backup realizado com sucesso em " + file.getName());
@@ -119,16 +103,16 @@ public class ActionHandler {
     }
 
     public void handleRestoreAction() {
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Restaurar Backup");
-        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
-        File file = fileChooser.showOpenDialog(table.getScene().getWindow());
-
-        if (file != null) {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Restaurar Backup");
+        int userSelection = fileChooser.showOpenDialog(table);
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            File file = fileChooser.getSelectedFile();
             try {
                 controller.restoreData(file.getAbsolutePath());
-                table.setItems(controller.getComputerList());
-                table.refresh();
+                // Atualiza o modelo da tabela com a nova lista de computadores
+                ((ComputerTableModel) table.getModel()).setComputers(controller.getComputerList());
+                table.repaint();
                 showAlert("Sucesso", "Dados restaurados com sucesso de " + file.getName());
             } catch (IOException ex) {
                 showAlert("Erro", "Falha ao restaurar os dados.");
@@ -138,10 +122,6 @@ public class ActionHandler {
     }
 
     private void showAlert(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+        JOptionPane.showMessageDialog(null, message, title, JOptionPane.INFORMATION_MESSAGE);
     }
 }

@@ -1,7 +1,5 @@
 package controller;
 
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import model.Computer;
 import model.HistoryEntry;
 import model.HistoryEntry.ActionType;
@@ -12,16 +10,18 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Classe InventoryController - Responsável pela lógica do inventário, histórico e gestão de usuários.
  */
 public class InventoryController {
 
-    private final ObservableList<Computer> computerList;
-    private final ObservableList<HistoryEntry> historyList;
-    private final ObservableList<User> users;
+    private final List<Computer> computerList;
+    private final List<HistoryEntry> historyList;
+    private final List<User> users;
     private final DatabaseHelper dbHelper;
     private static final String ADMIN_USERNAME = "admin";
     private static final String ADMIN_PASSWORD = "admin";
@@ -30,9 +30,10 @@ public class InventoryController {
     public InventoryController() {
         this.dbHelper = new DatabaseHelper();
         this.dbHelper.createTable();
-        this.computerList = FXCollections.observableArrayList();
-        this.historyList = FXCollections.observableArrayList();
-        this.users = dbHelper.loadUsers();
+        this.computerList = new ArrayList<>();
+        this.historyList = new ArrayList<>();
+        // Converte a lista retornada pelo DBHelper para ArrayList
+        this.users = new ArrayList<>(dbHelper.loadUsers());
         initializeAdminUser();
     }
 
@@ -43,15 +44,15 @@ public class InventoryController {
         }
     }
 
-    public ObservableList<Computer> getComputerList() {
+    public List<Computer> getComputerList() {
         return computerList;
     }
 
-    public ObservableList<HistoryEntry> getHistoryList() {
+    public List<HistoryEntry> getHistoryList() {
         return historyList;
     }
 
-    public ObservableList<User> getUsers() {
+    public List<User> getUsers() {
         return users;
     }
 
@@ -105,7 +106,7 @@ public class InventoryController {
     }
 
     public List<String> getUsernames() {
-        return users.stream().map(User::getUsername).toList();
+        return users.stream().map(User::getUsername).collect(Collectors.toList());
     }
 
     public int getComputerCount() {
@@ -138,26 +139,31 @@ public class InventoryController {
         }
     }
 
-    public ObservableList<Computer> searchComputers(String query) {
+    public List<Computer> searchComputers(String query) {
         if (query == null || query.trim().isEmpty()) {
-            return computerList;
+            return new ArrayList<>(computerList);
         }
         String lowerQuery = query.toLowerCase();
-        return computerList.filtered(computer ->
-                computer.getTag().toLowerCase().contains(lowerQuery) ||
-                        computer.getModel().toLowerCase().contains(lowerQuery) ||
-                        computer.getBrand().toLowerCase().contains(lowerQuery) ||
-                        computer.getUserName().toLowerCase().contains(lowerQuery));
+        return computerList.stream().filter(computer ->
+                        computer.getTag().toLowerCase().contains(lowerQuery) ||
+                                computer.getModel().toLowerCase().contains(lowerQuery) ||
+                                computer.getBrand().toLowerCase().contains(lowerQuery) ||
+                                computer.getUserName().toLowerCase().contains(lowerQuery))
+                .collect(Collectors.toList());
     }
 
-    public ObservableList<Computer> getComputersByLocation(String location) {
-        return computerList.filtered(computer -> computer.getLocation().equalsIgnoreCase(location));
+    public List<Computer> getComputersByLocation(String location) {
+        return computerList.stream()
+                .filter(computer -> computer.getLocation().equalsIgnoreCase(location))
+                .collect(Collectors.toList());
     }
 
     public void exportToCSV(String filePath) throws IOException {
         StringBuilder sb = new StringBuilder();
         sb.append("Etiqueta TI;Modelo;Marca;Estado;Usuário;Número de Série;Versão do Windows;Versão do Office;Localização;Data de Compra\n");
-        computerList.forEach(computer -> sb.append(formatCSV(computer)).append("\n"));
+        for (Computer computer : computerList) {
+            sb.append(formatCSV(computer)).append("\n");
+        }
         Files.write(Paths.get(filePath), sb.toString().getBytes("UTF-8"));
         log("Dados exportados para o arquivo: " + filePath);
     }
@@ -166,11 +172,15 @@ public class InventoryController {
         StringBuilder sb = new StringBuilder();
         sb.append("INVENTARIO\n");
         sb.append("Etiqueta TI;Modelo;Marca;Estado;Usuário;Número de Série;Versão do Windows;Versão do Office;Localização;Data de Compra\n");
-        computerList.forEach(computer -> sb.append(formatCSV(computer)).append("\n"));
+        for (Computer computer : computerList) {
+            sb.append(formatCSV(computer)).append("\n");
+        }
 
         sb.append("\nHISTORICO\n");
         sb.append("Action;User;Timestamp;Description\n");
-        historyList.forEach(history -> sb.append(formatCSV(history)).append("\n"));
+        for (HistoryEntry history : historyList) {
+            sb.append(formatCSV(history)).append("\n");
+        }
 
         Files.write(Paths.get(filePath), sb.toString().getBytes("UTF-8"));
         log("Backup realizado no arquivo: " + filePath);
