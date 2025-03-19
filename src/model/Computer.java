@@ -36,7 +36,8 @@ public class Computer {
         this.windowsVersion = windowsVersion;
         this.officeVersion = officeVersion;
         this.purchaseDate = purchaseDate;
-        this.location = location != null ? location : "Desconhecido";
+        this.location = (location != null && !location.trim().isEmpty()) ? location.trim() : "Desconhecido";
+
     }
 
     // Getters e Setters

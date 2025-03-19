@@ -18,7 +18,7 @@ public class ComputerFormHandler {
         // Cria um JDialog modal
         JDialog dialog = new JDialog((Frame) null, computer == null ? "Cadastrar Computador" : "Editar Computador", true);
         dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-        dialog.setSize(400, 400);
+        dialog.setSize(400, 450);
         dialog.setLocationRelativeTo(null);
 
         // Criação dos campos de formulário
@@ -30,29 +30,105 @@ public class ComputerFormHandler {
         JTextField serialField = new JTextField(20);
         JTextField windowsField = new JTextField(20);
         JTextField officeField = new JTextField(20);
-        JTextField locationField = new JTextField(20);
+        // Para o campo de localização, utiliza JComboBox
+        String[] locations = {"NPD", "INFAN"};
+        JComboBox<String> locationComboBox = new JComboBox<>(locations);
         JTextField purchaseField = new JTextField(20);
 
         // Se for edição, preenche os campos com os dados do computador
         if (computer != null) {
             populateFields(computer, tagField, modelField, brandField, stateField, userField,
-                    serialField, windowsField, officeField, locationField, purchaseField);
+                    serialField, windowsField, officeField, locationComboBox, purchaseField);
         } else if (currentUser != null) {
             userField.setText(currentUser); // Preenche automaticamente o campo usuário
         }
 
-        // Cria um painel com GridLayout para os rótulos e campos
-        String[] labels = {"Etiqueta TI:", "Modelo:", "Marca:", "Estado:", "Usuário:", "Número de Série:",
-                "Versão do Windows:", "Versão do Office:", "Localização:", "Data de Compra:"};
-        JTextField[] fields = {tagField, modelField, brandField, stateField, userField, serialField,
-                windowsField, officeField, locationField, purchaseField};
+        // Cria um painel com GridBagLayout para organizar os rótulos e campos
+        JPanel formPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        JPanel formPanel = new JPanel(new GridLayout(10, 2, 10, 10));
-        formPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        for (int i = 0; i < labels.length; i++) {
-            formPanel.add(new JLabel(labels[i]));
-            formPanel.add(fields[i]);
-        }
+        int row = 0;
+        // Etiqueta TI
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        formPanel.add(new JLabel("Etiqueta TI:"), gbc);
+        gbc.gridx = 1;
+        formPanel.add(tagField, gbc);
+
+        // Modelo
+        row++;
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        formPanel.add(new JLabel("Modelo:"), gbc);
+        gbc.gridx = 1;
+        formPanel.add(modelField, gbc);
+
+        // Marca
+        row++;
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        formPanel.add(new JLabel("Marca:"), gbc);
+        gbc.gridx = 1;
+        formPanel.add(brandField, gbc);
+
+        // Estado
+        row++;
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        formPanel.add(new JLabel("Estado:"), gbc);
+        gbc.gridx = 1;
+        formPanel.add(stateField, gbc);
+
+        // Usuário
+        row++;
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        formPanel.add(new JLabel("Usuário:"), gbc);
+        gbc.gridx = 1;
+        formPanel.add(userField, gbc);
+
+        // Número de Série
+        row++;
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        formPanel.add(new JLabel("Número de Série:"), gbc);
+        gbc.gridx = 1;
+        formPanel.add(serialField, gbc);
+
+        // Versão do Windows
+        row++;
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        formPanel.add(new JLabel("Versão do Windows:"), gbc);
+        gbc.gridx = 1;
+        formPanel.add(windowsField, gbc);
+
+        // Versão do Office
+        row++;
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        formPanel.add(new JLabel("Versão do Office:"), gbc);
+        gbc.gridx = 1;
+        formPanel.add(officeField, gbc);
+
+        // Localização (utiliza JComboBox)
+        row++;
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        formPanel.add(new JLabel("Localização:"), gbc);
+        gbc.gridx = 1;
+        formPanel.add(locationComboBox, gbc);
+
+        // Data de Compra
+        row++;
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        formPanel.add(new JLabel("Data de Compra:"), gbc);
+        gbc.gridx = 1;
+        formPanel.add(purchaseField, gbc);
 
         // Botão de salvar
         JButton saveButton = new JButton("Salvar");
@@ -73,7 +149,7 @@ public class ComputerFormHandler {
                 return;
             }
             if (computer == null) {
-                // Adiciona um novo computador
+                // Adiciona um novo computador, utilizando o valor selecionado do JComboBox
                 Computer newComputer = new Computer(
                         tagField.getText(),
                         modelField.getText(),
@@ -83,7 +159,7 @@ public class ComputerFormHandler {
                         serialField.getText(),
                         windowsField.getText(),
                         officeField.getText(),
-                        locationField.getText(),
+                        (String) locationComboBox.getSelectedItem(),
                         purchaseField.getText()
                 );
                 controller.addComputer(newComputer, currentUser);
@@ -99,7 +175,7 @@ public class ComputerFormHandler {
                         serialField.getText(),
                         windowsField.getText(),
                         officeField.getText(),
-                        locationField.getText(),
+                        (String) locationComboBox.getSelectedItem(),
                         purchaseField.getText()
                 );
                 controller.editComputer(computer, updatedComputer, currentUser);
@@ -111,17 +187,24 @@ public class ComputerFormHandler {
         dialog.setVisible(true);
     }
 
-    private void populateFields(Computer computer, JTextField... fields) {
-        fields[0].setText(computer.getTag());
-        fields[1].setText(computer.getModel());
-        fields[2].setText(computer.getBrand());
-        fields[3].setText(computer.getState());
-        fields[4].setText(computer.getUserName());
-        fields[5].setText(computer.getSerialNumber());
-        fields[6].setText(computer.getWindowsVersion());
-        fields[7].setText(computer.getOfficeVersion());
-        fields[8].setText(computer.getLocation());
-        fields[9].setText(computer.getPurchaseDate());
+    private void populateFields(Computer computer, JTextField tagField, JTextField modelField, JTextField brandField,
+                                JTextField stateField, JTextField userField, JTextField serialField,
+                                JTextField windowsField, JTextField officeField, JComboBox<String> locationComboBox,
+                                JTextField purchaseField) {
+        tagField.setText(computer.getTag());
+        modelField.setText(computer.getModel());
+        brandField.setText(computer.getBrand());
+        stateField.setText(computer.getState());
+        userField.setText(computer.getUserName());
+        serialField.setText(computer.getSerialNumber());
+        windowsField.setText(computer.getWindowsVersion());
+        officeField.setText(computer.getOfficeVersion());
+        // Seleciona a opção correspondente à localização
+        String loc = computer.getLocation();
+        if (loc != null) {
+            locationComboBox.setSelectedItem(loc);
+        }
+        purchaseField.setText(computer.getPurchaseDate());
     }
 
     private void showAlert(String title, String message) {

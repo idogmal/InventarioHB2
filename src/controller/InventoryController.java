@@ -14,9 +14,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * Classe InventoryController - Responsável pela lógica do inventário, histórico e gestão de usuários.
- */
 public class InventoryController {
 
     private final List<Computer> computerList;
@@ -30,9 +27,11 @@ public class InventoryController {
     public InventoryController() {
         this.dbHelper = new DatabaseHelper();
         this.dbHelper.createTable();
-        this.computerList = new ArrayList<>();
-        this.historyList = new ArrayList<>();
-        // Converte a lista retornada pelo DBHelper para ArrayList
+        // Carrega os computadores persistidos
+        this.computerList = new ArrayList<>(dbHelper.loadComputers());
+        // Carrega o histórico persistido
+        this.historyList = new ArrayList<>(dbHelper.loadHistory());
+        // Carrega os usuários persistidos
         this.users = new ArrayList<>(dbHelper.loadUsers());
         initializeAdminUser();
     }
@@ -113,9 +112,13 @@ public class InventoryController {
         return computerList.size();
     }
 
+    /**
+     * Adiciona um computador, persistindo-o no banco.
+     */
     public void addComputer(Computer computer, String user) {
         if (isValidUser(user)) {
             computerList.add(computer);
+            dbHelper.insertComputer(computer);
             addHistory(ActionType.ADICIONAR, user, "Adicionado computador: " + computer.getTag());
         }
     }
@@ -126,6 +129,7 @@ public class InventoryController {
             if (index >= 0) {
                 computerList.set(index, updatedComputer);
                 addHistory(ActionType.EDITAR, user, "Editado computador: " + oldComputer.getTag());
+                // Atualização no banco pode ser implementada se necessário
             } else {
                 log("Erro: Computador para edição não encontrado.");
             }
@@ -134,10 +138,17 @@ public class InventoryController {
 
     public void deleteComputer(Computer computer, String user) {
         if (isValidUser(user)) {
-            computerList.remove(computer);
-            addHistory(ActionType.EXCLUIR, user, "Excluído computador: " + computer.getTag());
+            // Tenta remover do banco de dados
+            if(dbHelper.deleteComputer(computer)) {
+                // Se remover do banco, remove da lista em memória e registra o histórico
+                computerList.remove(computer);
+                addHistory(ActionType.EXCLUIR, user, "Excluído computador: " + computer.getTag());
+            } else {
+                log("Erro ao remover o computador do banco.");
+            }
         }
     }
+
 
     public List<Computer> searchComputers(String query) {
         if (query == null || query.trim().isEmpty()) {
@@ -153,10 +164,15 @@ public class InventoryController {
     }
 
     public List<Computer> getComputersByLocation(String location) {
+        if (location == null || location.trim().isEmpty()) {
+            return new ArrayList<>(computerList);
+        }
+        String loc = location.trim();
         return computerList.stream()
-                .filter(computer -> computer.getLocation().equalsIgnoreCase(location))
+                .filter(computer -> computer.getLocation() != null && computer.getLocation().trim().equalsIgnoreCase(loc))
                 .collect(Collectors.toList());
     }
+
 
     public void exportToCSV(String filePath) throws IOException {
         StringBuilder sb = new StringBuilder();
@@ -211,9 +227,23 @@ public class InventoryController {
         log("Dados restaurados do arquivo: " + filePath);
     }
 
+    /**
+     * Adiciona um registro de histórico, persistindo-o no banco.
+     */
     public void addHistory(ActionType action, String user, String description) {
-        historyList.add(new HistoryEntry(action, user, LocalDateTime.now(), description));
+        HistoryEntry entry = new HistoryEntry(action, user, LocalDateTime.now(), description);
+        historyList.add(entry);
+        dbHelper.insertHistory(entry);
         log("Histórico adicionado: " + action + " - " + description);
+    }
+
+    /**
+     * Atualiza a lista de computadores carregando-os novamente do banco de dados.
+     */
+    public void refreshComputers() {
+        List<Computer> loaded = dbHelper.loadComputers();
+        computerList.clear();
+        computerList.addAll(loaded);
     }
 
     private String formatCSV(Computer computer) {

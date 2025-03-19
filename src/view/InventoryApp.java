@@ -65,7 +65,7 @@ public class InventoryApp {
         JButton manageUsersButton = new JButton("Gerenciar Usuários");
         JButton backButton = new JButton("⬅ Voltar");
 
-        // Configurar visibilidade do botão de gerenciamento de usuários (apenas admin)
+        // Verificar se o usuário logado é admin
         if ("admin".equals(controller.getCurrentUser())) {
             manageUsersButton.setVisible(true);
         } else {
@@ -160,7 +160,6 @@ public class InventoryApp {
         // Reutiliza a implementação da classe LoginApp
         LoginApp loginApp = new LoginApp();
         loginApp.showLocationSelection(null, currentUser);
-
     }
 
     /**
@@ -195,10 +194,10 @@ public class InventoryApp {
             showAlert("Erro", "Nenhum usuário logado. Não é possível cadastrar computadores.");
             return;
         }
-        // Assume que ComputerFormHandler foi convertido para Swing
+        // Abre o formulário (Swing) para cadastro/edição
         ComputerFormHandler formHandler = new ComputerFormHandler(controller);
         formHandler.openForm(computer, currentUser);
-        // Atualiza a tabela após cadastro
+        // Atualiza a tabela após cadastro ou edição
         tableModel.setComputers(controller.getComputerList());
         updateComputerCountLabel();
     }
@@ -399,7 +398,11 @@ public class InventoryApp {
      */
     private class ComputerTableModel extends AbstractTableModel {
 
-        private final String[] columnNames = {"Etiqueta TI", "Modelo", "Marca", "Estado", "Usuário", "Número de Série", "Versão do Windows", "Versão do Office", "Localização", "Data de Compra"};
+        private final String[] columnNames = {
+                "Etiqueta TI", "Modelo", "Marca", "Estado", "Usuário",
+                "Número de Série", "Versão do Windows", "Versão do Office",
+                "Localização", "Data de Compra"
+        };
         private List<Computer> computers;
 
         public ComputerTableModel(List<Computer> computers) {
@@ -453,5 +456,30 @@ public class InventoryApp {
             // Se desejar permitir edição direta na tabela, retorne true para as colunas editáveis
             return false;
         }
+    }
+
+    /**
+     * Substitui o placeholder por código real para abrir o inventário.
+     * Chamado pelo LoginApp (showLocationSelection) depois que o usuário escolhe NPD ou INFAN.
+     */
+    public static void openInventoryApp(String location, String currentUser) {
+        // Cria o controlador do inventário
+        InventoryController invController = new InventoryController();
+        invController.setCurrentUser(currentUser);
+
+        // Cria a janela do inventário
+        JFrame inventoryFrame = new JFrame("Inventário - " + location);
+        inventoryFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+        // Instancia o InventoryApp
+        InventoryApp inventoryApp = new InventoryApp();
+        inventoryApp.setController(invController);
+        // Monta a interface
+        inventoryApp.start(inventoryFrame);
+        // Aplica o filtro de localidade
+        inventoryApp.setLocationFilter(location);
+
+        // Exibe a janela
+        inventoryFrame.setVisible(true);
     }
 }

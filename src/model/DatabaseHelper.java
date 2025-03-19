@@ -3,9 +3,10 @@ package model;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.time.LocalDateTime;
 
 /**
- * Classe DatabaseHelper - Gerencia as operações do banco de dados para computadores e usuários.
+ * Classe DatabaseHelper - Gerencia as operações do banco de dados para computadores, usuários e histórico.
  */
 public class DatabaseHelper {
 
@@ -49,10 +50,20 @@ public class DatabaseHelper {
                 "password TEXT NOT NULL" +
                 ");";
 
+        // Nova tabela para histórico
+        String historyTableSQL = "CREATE TABLE IF NOT EXISTS history (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "action TEXT, " +
+                "user TEXT, " +
+                "timestamp TEXT, " +
+                "description TEXT" +
+                ");";
+
         try (Connection conn = connect();
              Statement stmt = conn.createStatement()) {
             stmt.execute(computerTableSQL);
             stmt.execute(userTableSQL);
+            stmt.execute(historyTableSQL);
             System.out.println("Tabelas criadas/verificadas com sucesso.");
         } catch (SQLException e) {
             System.out.println("Erro ao criar tabelas: " + e.getMessage());
@@ -83,6 +94,33 @@ public class DatabaseHelper {
             System.out.println("Computador inserido com sucesso.");
         } catch (SQLException e) {
             System.out.println("Erro ao inserir computador: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Exclui um computador do banco de dados.
+     * Utiliza "tag" e "serial_number" para identificar o registro.
+     *
+     * @param computer Computador a ser removido.
+     * @return true se o registro foi removido com sucesso, caso contrário false.
+     */
+    public boolean deleteComputer(Computer computer) {
+        String sql = "DELETE FROM computers WHERE tag = ? AND serial_number = ?";
+        try (Connection conn = connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, computer.getTag());
+            pstmt.setString(2, computer.getSerialNumber());
+            int rowsAffected = pstmt.executeUpdate();
+            if (rowsAffected > 0) {
+                System.out.println("Computador deletado com sucesso.");
+                return true;
+            } else {
+                System.out.println("Nenhum computador foi deletado.");
+                return false;
+            }
+        } catch (SQLException e) {
+            System.out.println("Erro ao excluir computador: " + e.getMessage());
+            return false;
         }
     }
 
@@ -221,5 +259,133 @@ public class DatabaseHelper {
             System.out.println("Erro ao excluir usuário: " + e.getMessage());
             return false;
         }
+    }
+
+    /**
+     * Carrega os computadores do banco de dados.
+     *
+     * @return Lista de computadores.
+     */
+    public List<Computer> loadComputers() {
+        List<Computer> computers = new ArrayList<>();
+        String sql = "SELECT tag, serial_number, model, brand, state, user_name, windows_version, office_version, location, purchase_date FROM computers";
+        try (Connection conn = connect();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                Computer computer = new Computer(
+                        rs.getString("tag"),
+                        rs.getString("model"),
+                        rs.getString("brand"),
+                        rs.getString("state"),
+                        rs.getString("user_name"),
+                        rs.getString("serial_number"),
+                        rs.getString("windows_version"),
+                        rs.getString("office_version"),
+                        rs.getString("location"),
+                        rs.getString("purchase_date")
+                );
+                computers.add(computer);
+            }
+        } catch (SQLException e) {
+            System.out.println("Erro ao carregar computadores: " + e.getMessage());
+        }
+        return computers;
+    }
+
+    /**
+     * Insere um registro de histórico no banco de dados.
+     *
+     * @param history Registro de histórico a ser inserido.
+     */
+    public void insertHistory(HistoryEntry history) {
+        String sql = "INSERT INTO history(action, user, timestamp, description) VALUES(?, ?, ?, ?)";
+        try (Connection conn = connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, history.getAction().name());
+            pstmt.setString(2, history.getUser());
+            pstmt.setString(3, history.getTimestamp().toString());
+            pstmt.setString(4, history.getDescription());
+            pstmt.executeUpdate();
+            System.out.println("Histórico inserido com sucesso.");
+        } catch (SQLException e) {
+            System.out.println("Erro ao inserir histórico: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Carrega os registros de histórico do banco de dados.
+     *
+     * @return Lista de registros de histórico.
+     */
+    public List<HistoryEntry> loadHistory() {
+        List<HistoryEntry> historyList = new ArrayList<>();
+        String sql = "SELECT action, user, timestamp, description FROM history";
+        try (Connection conn = connect();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                HistoryEntry history = new HistoryEntry(
+                        HistoryEntry.ActionType.valueOf(rs.getString("action")),
+                        rs.getString("user"),
+                        LocalDateTime.parse(rs.getString("timestamp")),
+                        rs.getString("description")
+                );
+                historyList.add(history);
+            }
+        } catch (SQLException e) {
+            System.out.println("Erro ao carregar histórico: " + e.getMessage());
+        }
+        return historyList;
+    }
+
+    private String formatCSV(Computer computer) {
+        return String.format("\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\"",
+                computer.getTag(), computer.getModel(), computer.getBrand(), computer.getState(),
+                computer.getUserName(), computer.getSerialNumber(), computer.getWindowsVersion(),
+                computer.getOfficeVersion(), computer.getLocation(), computer.getPurchaseDate());
+    }
+
+    private String formatCSV(HistoryEntry history) {
+        return String.format("\"%s\";\"%s\";\"%s\";\"%s\"",
+                history.getAction(), history.getUser(), history.getTimestamp(), history.getDescription());
+    }
+
+    private Computer parseComputer(String line) {
+        String[] data = line.split(";", -1);
+        return new Computer(
+                data[0].replace("\"", ""),
+                data[1].replace("\"", ""),
+                data[2].replace("\"", ""),
+                data[3].replace("\"", ""),
+                data[4].replace("\"", ""),
+                data[5].replace("\"", ""),
+                data[6].replace("\"", ""),
+                data[7].replace("\"", ""),
+                data[8].replace("\"", ""),
+                data[9].replace("\"", "")
+        );
+    }
+
+    private HistoryEntry parseHistory(String line) {
+        String[] data = line.split(";", -1);
+        return new HistoryEntry(
+                HistoryEntry.ActionType.valueOf(data[0].replace("\"", "").toUpperCase()),
+                data[1].replace("\"", ""),
+                LocalDateTime.parse(data[2].replace("\"", "")),
+                data[3].replace("\"", "")
+        );
+    }
+
+    private boolean isValidUser(String user) {
+        if(user == null || user.isEmpty()){
+            log("Erro: Operação sem usuário válido.");
+            return false;
+        }
+        return true;
+    }
+
+    private void log(String message) {
+        System.out.println(message);
     }
 }

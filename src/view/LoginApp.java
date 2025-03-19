@@ -30,7 +30,8 @@ public class LoginApp {
 
     private void createAndShowGUI() {
         JFrame frame = new JFrame("Login");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        // Use DISPOSE_ON_CLOSE para que fechar o login não encerre toda a aplicação
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
         // Painel principal com BorderLayout e margens
         JPanel mainPanel = new JPanel(new BorderLayout());
@@ -56,7 +57,7 @@ public class LoginApp {
         centerPanel.add(userLabel, gbc);
 
         JTextField userNameField = new JTextField(20);
-        // Ajustar peso para expandir o campo de texto
+        userNameField.setPreferredSize(new Dimension(250, 30)); // campo ampliado
         gbc.gridx = 1;
         gbc.weightx = 1.0;
         centerPanel.add(userNameField, gbc);
@@ -69,6 +70,7 @@ public class LoginApp {
         centerPanel.add(passLabel, gbc);
 
         JPasswordField passwordField = new JPasswordField(20);
+        passwordField.setPreferredSize(new Dimension(250, 30)); // campo ampliado
         gbc.gridx = 1;
         gbc.weightx = 1.0;
         centerPanel.add(passwordField, gbc);
@@ -87,9 +89,8 @@ public class LoginApp {
 
         // Deixe o layout calcular o tamanho ideal
         frame.pack();
-        // Define um tamanho mínimo, caso queira garantir que não fique muito pequeno
+        // Define um tamanho mínimo, se necessário
         frame.setMinimumSize(new Dimension(400, 300));
-
         // Centraliza na tela
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
@@ -100,8 +101,10 @@ public class LoginApp {
             String password = new String(passwordField.getPassword());
             if (loginController.login(username, password)) {
                 JOptionPane.showMessageDialog(frame, "Login bem-sucedido!");
-                // Exibe a seleção de local
-                showLocationSelection(frame, username);
+                // Após o login, descarta a tela de login
+                frame.dispose();
+                // Abre a seleção de local sem parent (para evitar que o login reapareça)
+                showLocationSelection(null, username);
             } else {
                 JOptionPane.showMessageDialog(frame, "Nome de usuário ou senha incorretos.",
                         "Falha no Login", JOptionPane.ERROR_MESSAGE);
@@ -165,9 +168,10 @@ public class LoginApp {
         dialog.setVisible(true);
     }
 
-    // Abre o inventário (aqui, apenas um placeholder)
+    // Atualizado: abre o inventário chamando o método real da classe InventoryApp
     private void openInventoryApp(String location, String currentUser) {
-        JOptionPane.showMessageDialog(null, "Abrindo inventário para " + location + " como " + currentUser);
+        // Chama o método estático da InventoryApp para abrir a janela do inventário
+        InventoryApp.openInventoryApp(location, currentUser);
     }
 
     // Janela de cadastro de usuário aprimorada
@@ -188,6 +192,7 @@ public class LoginApp {
         panel.add(userLabel, gbc);
 
         JTextField userField = new JTextField(20);
+        userField.setPreferredSize(new Dimension(250, 30));
         gbc.gridx = 1;
         gbc.weightx = 1.0;
         panel.add(userField, gbc);
@@ -199,6 +204,7 @@ public class LoginApp {
         panel.add(passLabel, gbc);
 
         JPasswordField passField = new JPasswordField(20);
+        passField.setPreferredSize(new Dimension(250, 30));
         gbc.gridx = 1;
         gbc.weightx = 1.0;
         panel.add(passField, gbc);
