@@ -5,7 +5,6 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import model.DatabaseHelper;
 import model.User;
-import view.InventoryApp;
 
 public class LoginController {
 
@@ -67,24 +66,24 @@ public class LoginController {
         }
     }
 
-    // Método para abrir a tela do inventário usando Swing
+    /**
+     * Exemplo de método para abrir a tela principal do sistema em Swing.
+     * Ajuste conforme sua lógica de navegação (MainApp, LocalSelectionPanel etc.).
+     */
     public void openInventoryScreen() {
         if (loggedInUser == null) {
             throw new IllegalStateException("Nenhum usuário logado. Faça login antes de abrir a tela do inventário.");
         }
 
-        try {
-            InventoryApp inventoryApp = new InventoryApp();
-            InventoryController inventoryController = new InventoryController();
-            inventoryApp.setController(inventoryController);
-            inventoryController.setCurrentUser(loggedInUser);
-            // Cria um JFrame para o inventário
-            JFrame frame = new JFrame("Inventário de Computadores");
-            frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-            inventoryApp.start(frame);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        // Exemplo simples: apenas exibe uma mensagem
+        JOptionPane.showMessageDialog(null,
+                "Abrindo tela de inventário em Swing para o usuário: " + loggedInUser,
+                "Inventário", JOptionPane.INFORMATION_MESSAGE);
+
+        // Se tiver uma classe MainApp, você pode instanciá-la aqui:
+        // MainApp mainApp = new MainApp();
+        // mainApp.setVisible(true);
+        // ou outra forma de mostrar o painel de inventário.
     }
 
     // Adicionar suporte à tecla Enter no login utilizando Swing
