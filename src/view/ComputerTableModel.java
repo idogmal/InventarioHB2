@@ -5,7 +5,7 @@ import javax.swing.table.AbstractTableModel;
 import java.util.List;
 
 public class ComputerTableModel extends AbstractTableModel {
-    private final String[] columnNames = { "Etiqueta TI", "Modelo", "Marca", "Estado", "Usuário",
+    private final String[] columnNames = { "Etiqueta TI", "Marca", "Modelo", "Estado", "Usuário",
             "Número de Série", "Versão do Windows", "Versão do Office", "Localização", "Data de Compra",
             "Observações" };
     private List<Computer> computers;
@@ -45,9 +45,9 @@ public class ComputerTableModel extends AbstractTableModel {
             case 0:
                 return c.getTag();
             case 1:
-                return c.getModel();
-            case 2:
                 return c.getBrand();
+            case 2:
+                return c.getModel();
             case 3:
                 return c.getState();
             case 4:

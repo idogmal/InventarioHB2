@@ -64,14 +64,6 @@ public class ComputerFormHandler {
         gbc.gridx = 1;
         formPanel.add(tagField, gbc);
 
-        // Modelo
-        row++;
-        gbc.gridx = 0;
-        gbc.gridy = row;
-        formPanel.add(new JLabel("Modelo:"), gbc);
-        gbc.gridx = 1;
-        formPanel.add(modelField, gbc);
-
         // Marca
         row++;
         gbc.gridx = 0;
@@ -79,6 +71,14 @@ public class ComputerFormHandler {
         formPanel.add(new JLabel("Marca:"), gbc);
         gbc.gridx = 1;
         formPanel.add(brandField, gbc);
+
+        // Modelo
+        row++;
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        formPanel.add(new JLabel("Modelo:"), gbc);
+        gbc.gridx = 1;
+        formPanel.add(modelField, gbc);
 
         // Estado
         row++;

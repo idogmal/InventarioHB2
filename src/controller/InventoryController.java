@@ -270,6 +270,12 @@ public class InventoryController {
         computerList.addAll(loaded);
     }
 
+    public void refreshHistory() {
+        List<HistoryEntry> loaded = dbHelper.loadHistory();
+        historyList.clear();
+        historyList.addAll(loaded);
+    }
+
     private String formatCSV(Computer computer) {
         return String.format("\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\"",
                 computer.getTag(), computer.getModel(), computer.getBrand(), computer.getState(),

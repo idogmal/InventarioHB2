@@ -22,14 +22,21 @@ public class HistoryWindow {
         historyFrame.setLocationRelativeTo(null);
         historyFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
-        String[] columnNames = {"Ação", "Usuário", "Data e Hora", "Descrição"};
+        String[] columnNames = { "Ação", "Usuário", "Data e Hora", "Descrição" };
         DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
 
+        // Recarrega o histórico do banco de dados para garantir dados atualizados
+        controller.refreshHistory();
+
+        // Obtém a lista e ordena por data (mais recente primeiro)
+        java.util.List<HistoryEntry> sortedList = new java.util.ArrayList<>(controller.getHistoryList());
+        sortedList.sort((h1, h2) -> h2.getTimestamp().compareTo(h1.getTimestamp()));
+
         // Preencher o modelo com os dados do histórico
-        for (HistoryEntry entry : controller.getHistoryList()) {
+        for (HistoryEntry entry : sortedList) {
             String formattedTimestamp = entry.getTimestamp().format(formatter);
-            Object[] row = {entry.getAction(), entry.getUser(), formattedTimestamp, entry.getDescription()};
+            Object[] row = { entry.getAction(), entry.getUser(), formattedTimestamp, entry.getDescription() };
             tableModel.addRow(row);
         }
 
