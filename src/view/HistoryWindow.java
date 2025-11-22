@@ -42,6 +42,13 @@ public class HistoryWindow {
 
         JTable historyTable = new JTable(tableModel);
         historyTable.setFillsViewportHeight(true);
+
+        // Ajuste de largura das colunas
+        historyTable.getColumnModel().getColumn(0).setPreferredWidth(80); // Ação
+        historyTable.getColumnModel().getColumn(1).setPreferredWidth(80); // Usuário
+        historyTable.getColumnModel().getColumn(2).setPreferredWidth(120); // Data e Hora
+        historyTable.getColumnModel().getColumn(3).setPreferredWidth(300); // Descrição
+
         JScrollPane scrollPane = new JScrollPane(historyTable);
 
         JPanel panel = new JPanel(new BorderLayout());
