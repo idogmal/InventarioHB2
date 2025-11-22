@@ -1,0 +1,7 @@
+INVENTARIO
+Tag,Serial Number,Model,Brand,State,User Name,Windows Version,Office Version,Location,Purchase Date
+qweqw,,,12312312,,312312,,,,
+
+HISTORICO
+Action,User,Timestamp,Description
+Adicionar,admin,2024-11-23T19:46:29.605198500,Adicionou o computador: qweqw
