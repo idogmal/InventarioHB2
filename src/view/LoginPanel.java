@@ -16,8 +16,8 @@ public class LoginPanel extends JPanel {
     }
 
     private void initComponents() {
-        setLayout(new BorderLayout(10,10));
-        setBorder(BorderFactory.createEmptyBorder(20,20,20,20));
+        setLayout(new BorderLayout(10, 10));
+        setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
         // Cabeçalho
         JLabel welcomeLabel = new JLabel("Bem-vindo ao Sistema de Inventário", SwingConstants.CENTER);
@@ -27,7 +27,7 @@ public class LoginPanel extends JPanel {
         // Painel central com GridBagLayout para os campos
         JPanel centerPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10,10,10,10);
+        gbc.insets = new Insets(10, 10, 10, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
         // Nome de usuário
@@ -38,7 +38,7 @@ public class LoginPanel extends JPanel {
         centerPanel.add(userLabel, gbc);
 
         JTextField userField = new JTextField(20);
-        userField.setPreferredSize(new Dimension(250,30));
+        userField.setPreferredSize(new Dimension(250, 30));
         gbc.gridx = 1;
         gbc.weightx = 1.0;
         centerPanel.add(userField, gbc);
@@ -51,7 +51,7 @@ public class LoginPanel extends JPanel {
         centerPanel.add(passLabel, gbc);
 
         JPasswordField passField = new JPasswordField(20);
-        passField.setPreferredSize(new Dimension(250,30));
+        passField.setPreferredSize(new Dimension(250, 30));
         gbc.gridx = 1;
         gbc.weightx = 1.0;
         centerPanel.add(passField, gbc);
@@ -59,7 +59,7 @@ public class LoginPanel extends JPanel {
         add(centerPanel, BorderLayout.CENTER);
 
         // Painel inferior com botões
-        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER,20,10));
+        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
         JButton loginButton = new JButton("Login");
         JButton registerButton = new JButton("Cadastrar");
         bottomPanel.add(loginButton);
@@ -70,9 +70,9 @@ public class LoginPanel extends JPanel {
         loginButton.addActionListener(e -> {
             String username = userField.getText();
             String password = new String(passField.getPassword());
-            if(loginController.login(username, password)){
+            if (loginController.login(username, password)) {
                 JOptionPane.showMessageDialog(this, "Login bem-sucedido!");
-                mainApp.showLocalSelectionPanel(username);
+                mainApp.showInventoryPanel(username);
             } else {
                 JOptionPane.showMessageDialog(this, "Nome de usuário ou senha incorretos.",
                         "Falha no Login", JOptionPane.ERROR_MESSAGE);
@@ -80,19 +80,19 @@ public class LoginPanel extends JPanel {
         });
 
         // Suporte à tecla Enter
-        passField.addKeyListener(new KeyAdapter(){
+        passField.addKeyListener(new KeyAdapter() {
             @Override
-            public void keyPressed(KeyEvent e){
-                if(e.getKeyCode() == KeyEvent.VK_ENTER){
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
                     loginButton.doClick();
                 }
             }
         });
 
-        userField.addKeyListener(new KeyAdapter(){
+        userField.addKeyListener(new KeyAdapter() {
             @Override
-            public void keyPressed(KeyEvent e){
-                if(e.getKeyCode() == KeyEvent.VK_ENTER){
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
                     passField.requestFocusInWindow();
                 }
             }
@@ -100,7 +100,8 @@ public class LoginPanel extends JPanel {
 
         // Ação do botão Cadastrar (abre um diálogo de registro ou outro painel)
         registerButton.addActionListener(e -> {
-            // Exemplo: abre uma nova janela de registro (pode ser integrado a um painel também)
+            // Exemplo: abre uma nova janela de registro (pode ser integrado a um painel
+            // também)
             RegisterDialog.showDialog(mainApp, loginController);
         });
     }

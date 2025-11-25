@@ -43,7 +43,10 @@ public class DatabaseHelper {
                 "office_version TEXT, " +
                 "location TEXT, " +
                 "purchase_date TEXT, " +
-                "observation TEXT" + // Adicionado campo de observação
+                "observation TEXT, " + // Adicionado campo de observação
+                "hostname TEXT, " + // Adicionado campo hostname
+                "sector TEXT, " + // Adicionado campo setor
+                "patrimony TEXT" + // Adicionado campo patrimonio
                 ");";
 
         String userTableSQL = "CREATE TABLE IF NOT EXISTS users (" +
@@ -70,15 +73,37 @@ public class DatabaseHelper {
             // Migração: Verifica se a coluna 'observation' existe na tabela 'computers'
             try (ResultSet rs = stmt.executeQuery("PRAGMA table_info(computers)")) {
                 boolean hasObservation = false;
+                boolean hasHostname = false;
+                boolean hasSector = false;
+                boolean hasPatrimony = false;
+
                 while (rs.next()) {
-                    if ("observation".equalsIgnoreCase(rs.getString("name"))) {
+                    String colName = rs.getString("name");
+                    if ("observation".equalsIgnoreCase(colName)) {
                         hasObservation = true;
-                        break;
+                    } else if ("hostname".equalsIgnoreCase(colName)) {
+                        hasHostname = true;
+                    } else if ("sector".equalsIgnoreCase(colName)) {
+                        hasSector = true;
+                    } else if ("patrimony".equalsIgnoreCase(colName)) {
+                        hasPatrimony = true;
                     }
                 }
                 if (!hasObservation) {
                     stmt.execute("ALTER TABLE computers ADD COLUMN observation TEXT");
                     System.out.println("Coluna 'observation' adicionada à tabela 'computers'.");
+                }
+                if (!hasHostname) {
+                    stmt.execute("ALTER TABLE computers ADD COLUMN hostname TEXT");
+                    System.out.println("Coluna 'hostname' adicionada à tabela 'computers'.");
+                }
+                if (!hasSector) {
+                    stmt.execute("ALTER TABLE computers ADD COLUMN sector TEXT");
+                    System.out.println("Coluna 'sector' adicionada à tabela 'computers'.");
+                }
+                if (!hasPatrimony) {
+                    stmt.execute("ALTER TABLE computers ADD COLUMN patrimony TEXT");
+                    System.out.println("Coluna 'patrimony' adicionada à tabela 'computers'.");
                 }
             }
 
@@ -94,9 +119,9 @@ public class DatabaseHelper {
      * @param computer Computador a ser inserido.
      */
     public void insertComputer(Computer computer) {
-        String sql = "INSERT INTO computers(tag, serial_number, model, brand, state, user_name, windows_version, office_version, location, purchase_date, observation) "
+        String sql = "INSERT INTO computers(tag, serial_number, model, brand, state, user_name, windows_version, office_version, location, purchase_date, observation, hostname, sector, patrimony) "
                 +
-                "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = connect();
                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, computer.getTag());
@@ -110,6 +135,9 @@ public class DatabaseHelper {
             pstmt.setString(9, computer.getLocation());
             pstmt.setString(10, computer.getPurchaseDate());
             pstmt.setString(11, computer.getObservation());
+            pstmt.setString(12, computer.getHostname());
+            pstmt.setString(13, computer.getSector());
+            pstmt.setString(14, computer.getPatrimony());
             pstmt.executeUpdate();
             System.out.println("Computador inserido com sucesso.");
         } catch (SQLException e) {
@@ -151,7 +179,9 @@ public class DatabaseHelper {
      */
     public boolean updateComputer(Computer computer) {
         String sql = "UPDATE computers SET tag = ?, serial_number = ?, model = ?, brand = ?, state = ?, " +
-                "user_name = ?, windows_version = ?, office_version = ?, location = ?, purchase_date = ?, observation = ? "
+                "user_name = ?, windows_version = ?, office_version = ?, location = ?, purchase_date = ?, observation = ?, "
+                +
+                "hostname = ?, sector = ?, patrimony = ? "
                 +
                 "WHERE id = ?";
         try (Connection conn = connect();
@@ -167,7 +197,10 @@ public class DatabaseHelper {
             pstmt.setString(9, computer.getLocation());
             pstmt.setString(10, computer.getPurchaseDate());
             pstmt.setString(11, computer.getObservation());
-            pstmt.setInt(12, computer.getId());
+            pstmt.setString(12, computer.getHostname());
+            pstmt.setString(13, computer.getSector());
+            pstmt.setString(14, computer.getPatrimony());
+            pstmt.setInt(15, computer.getId());
 
             int rowsAffected = pstmt.executeUpdate();
             if (rowsAffected > 0) {
@@ -327,7 +360,7 @@ public class DatabaseHelper {
      */
     public List<Computer> loadComputers() {
         List<Computer> computers = new ArrayList<>();
-        String sql = "SELECT id, tag, serial_number, model, brand, state, user_name, windows_version, office_version, location, purchase_date, observation FROM computers";
+        String sql = "SELECT id, tag, serial_number, model, brand, state, user_name, windows_version, office_version, location, purchase_date, observation, hostname, sector, patrimony FROM computers";
         try (Connection conn = connect();
                 PreparedStatement stmt = conn.prepareStatement(sql);
                 ResultSet rs = stmt.executeQuery()) {
@@ -344,7 +377,10 @@ public class DatabaseHelper {
                         rs.getString("office_version"),
                         rs.getString("purchase_date"),
                         rs.getString("location"),
-                        rs.getString("observation"));
+                        rs.getString("observation"),
+                        rs.getString("hostname"),
+                        rs.getString("sector"),
+                        rs.getString("patrimony"));
                 computers.add(computer);
             }
         } catch (SQLException e) {

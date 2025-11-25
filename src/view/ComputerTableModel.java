@@ -5,9 +5,8 @@ import javax.swing.table.AbstractTableModel;
 import java.util.List;
 
 public class ComputerTableModel extends AbstractTableModel {
-    private final String[] columnNames = { "Etiqueta TI", "Marca", "Modelo", "Estado", "Usuário",
-            "Número de Série", "Versão do Windows", "Versão do Office", "Localização", "Data de Compra",
-            "Observações" };
+    private final String[] columnNames = { "ETIQUETA-TI", "NOME DO PC", "USUÁRIO", "LOCALIZACAO", "SETOR",
+            "VERSAO SO", "VERSAO OFFICE", "MODELO", "Nº SERIE", "DATA DE COMPRA", "PATRIMONIO", "OBS" };
     private List<Computer> computers;
 
     public ComputerTableModel(List<Computer> computers) {
@@ -45,24 +44,26 @@ public class ComputerTableModel extends AbstractTableModel {
             case 0:
                 return c.getTag();
             case 1:
-                return c.getBrand();
+                return c.getHostname();
             case 2:
-                return c.getModel();
-            case 3:
-                return c.getState();
-            case 4:
                 return c.getUserName();
-            case 5:
-                return c.getSerialNumber();
-            case 6:
-                return c.getWindowsVersion();
-            case 7:
-                return c.getOfficeVersion();
-            case 8:
+            case 3:
                 return c.getLocation();
+            case 4:
+                return c.getSector();
+            case 5:
+                return c.getWindowsVersion();
+            case 6:
+                return c.getOfficeVersion();
+            case 7:
+                return c.getModel();
+            case 8:
+                return c.getSerialNumber();
             case 9:
                 return c.getPurchaseDate();
             case 10:
+                return c.getPatrimony();
+            case 11:
                 return "Ver/Editar"; // Botão
             default:
                 return "";
@@ -71,6 +72,6 @@ public class ComputerTableModel extends AbstractTableModel {
 
     @Override
     public boolean isCellEditable(int rowIndex, int columnIndex) {
-        return columnIndex == 10; // Apenas a coluna de observações é editável (para o botão funcionar)
+        return columnIndex == 11; // Apenas a coluna de observações é editável (para o botão funcionar)
     }
 }

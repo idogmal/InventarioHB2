@@ -15,6 +15,9 @@ public class Computer {
     private String purchaseDate;
     private String location; // Localidade do computador
     private String observation; // Observações do computador
+    private String hostname; // Nome do PC
+    private String sector; // Setor
+    private String patrimony; // Patrimônio
 
     /**
      * Construtor vazio para Computer.
@@ -34,7 +37,7 @@ public class Computer {
      */
     public Computer(String tag, String model, String brand, String state, String userName,
             String serialNumber, String windowsVersion, String officeVersion, String purchaseDate, String location,
-            String observation) {
+            String observation, String hostname, String sector, String patrimony) {
         this.tag = tag;
         this.model = model;
         this.brand = brand;
@@ -46,13 +49,16 @@ public class Computer {
         this.purchaseDate = purchaseDate;
         this.location = (location != null && !location.trim().isEmpty()) ? location.trim() : "Desconhecido";
         this.observation = observation;
+        this.hostname = hostname;
+        this.sector = sector;
+        this.patrimony = patrimony;
     }
 
-    // Construtor de compatibilidade (sem observation)
+    // Construtor de compatibilidade (sem novos campos e sem observation)
     public Computer(String tag, String model, String brand, String state, String userName,
             String serialNumber, String windowsVersion, String officeVersion, String purchaseDate, String location) {
         this(tag, model, brand, state, userName, serialNumber, windowsVersion, officeVersion, purchaseDate, location,
-                "");
+                "", "", "", "");
     }
 
     /**
@@ -60,7 +66,7 @@ public class Computer {
      */
     public Computer(int id, String tag, String model, String brand, String state, String userName,
             String serialNumber, String windowsVersion, String officeVersion, String purchaseDate, String location,
-            String observation) {
+            String observation, String hostname, String sector, String patrimony) {
         this.id = id;
         this.tag = tag;
         this.model = model;
@@ -73,13 +79,16 @@ public class Computer {
         this.purchaseDate = purchaseDate;
         this.location = (location != null && !location.trim().isEmpty()) ? location.trim() : "Desconhecido";
         this.observation = observation;
+        this.hostname = hostname;
+        this.sector = sector;
+        this.patrimony = patrimony;
     }
 
-    // Construtor de compatibilidade com ID (sem observation)
+    // Construtor de compatibilidade com ID (sem novos campos e sem observation)
     public Computer(int id, String tag, String model, String brand, String state, String userName,
             String serialNumber, String windowsVersion, String officeVersion, String purchaseDate, String location) {
         this(id, tag, model, brand, state, userName, serialNumber, windowsVersion, officeVersion, purchaseDate,
-                location, "");
+                location, "", "", "", "");
     }
 
     // Getters e Setters
@@ -180,6 +189,30 @@ public class Computer {
         this.observation = observation;
     }
 
+    public String getHostname() {
+        return hostname;
+    }
+
+    public void setHostname(String hostname) {
+        this.hostname = hostname;
+    }
+
+    public String getSector() {
+        return sector;
+    }
+
+    public void setSector(String sector) {
+        this.sector = sector;
+    }
+
+    public String getPatrimony() {
+        return patrimony;
+    }
+
+    public void setPatrimony(String patrimony) {
+        this.patrimony = patrimony;
+    }
+
     @Override
     public String toString() {
         return "Computer{" +
@@ -193,6 +226,9 @@ public class Computer {
                 ", officeVersion='" + officeVersion + '\'' +
                 ", purchaseDate='" + purchaseDate + '\'' +
                 ", location='" + location + '\'' +
+                ", hostname='" + hostname + '\'' +
+                ", sector='" + sector + '\'' +
+                ", patrimony='" + patrimony + '\'' +
                 '}';
     }
 }

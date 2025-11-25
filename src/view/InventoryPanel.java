@@ -50,7 +50,7 @@ public class InventoryPanel extends JPanel {
         GridBagConstraints gbcTop = new GridBagConstraints();
         gbcTop.insets = new Insets(5, 5, 5, 5); // Espaçamento
 
-        JButton backButton = new JButton("⬅ Voltar");
+        JButton backButton = new JButton("Sair");
         gbcTop.gridx = 0;
         gbcTop.gridy = 0;
         gbcTop.anchor = GridBagConstraints.WEST; // Alinha à esquerda
@@ -81,9 +81,10 @@ public class InventoryPanel extends JPanel {
         table.setAutoCreateRowSorter(true); // Habilita ordenação
         table.setFillsViewportHeight(true); // Ocupa altura disponível
 
-        // Configura o renderizador e editor para a coluna de observações (índice 10)
-        table.getColumn("Observações").setCellRenderer(new ButtonRenderer());
-        table.getColumn("Observações").setCellEditor(new ButtonEditor(new JCheckBox()));
+        // Configura o renderizador e editor para a coluna de observações (índice 11 -
+        // OBS)
+        table.getColumn("OBS").setCellRenderer(new ButtonRenderer());
+        table.getColumn("OBS").setCellEditor(new ButtonEditor(new JCheckBox()));
 
         JScrollPane tableScrollPane = new JScrollPane(table);
         add(tableScrollPane, BorderLayout.CENTER); // Adiciona tabela ao Centro
@@ -143,11 +144,11 @@ public class InventoryPanel extends JPanel {
         // --- Action Listeners (Originais, exceto backup/restore que foram removidos)
         // ---
 
-        // Listener do botão Voltar (no topPanel)
+        // Listener do botão Sair (no topPanel)
         backButton.addActionListener(e -> {
             if (searchField != null)
-                searchField.setText(""); // Limpa busca ao voltar
-            mainApp.showLocalSelectionPanel(controller.getCurrentUser());
+                searchField.setText(""); // Limpa busca ao sair
+            mainApp.showLoginPanel();
         });
 
         // Listener do campo de Busca (no topPanel)
@@ -259,6 +260,9 @@ public class InventoryPanel extends JPanel {
             String finalQuery = query; // Necessário para lambda
             listToFilter = listToFilter.stream().filter(
                     computer -> (computer.getTag() != null && computer.getTag().toLowerCase().contains(finalQuery)) ||
+                            (computer.getHostname() != null
+                                    && computer.getHostname().toLowerCase().contains(finalQuery))
+                            ||
                             (computer.getModel() != null && computer.getModel().toLowerCase().contains(finalQuery)) ||
                             (computer.getBrand() != null && computer.getBrand().toLowerCase().contains(finalQuery)) ||
                             (computer.getUserName() != null

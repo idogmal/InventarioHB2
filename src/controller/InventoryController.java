@@ -199,7 +199,7 @@ public class InventoryController {
     public void exportToCSV(List<Computer> computersToExport, String filePath) throws IOException {
         StringBuilder sb = new StringBuilder();
         sb.append(
-                "Etiqueta TI;Modelo;Marca;Estado;Usuário;Número de Série;Versão do Windows;Versão do Office;Localização;Data de Compra;Observações\n");
+                "ETIQUETA TI;NOME DO PC;USUÁRIO;LOCALIZAÇÃO;SETOR;VERSÃO DO WINDOWS;VERSÃO DO OFFICE;MODELO;NÚMERO DE SÉRIE;DATA DE COMPRA;PATRIMÔNIO;OBSERVAÇÕES\n");
         for (Computer computer : computersToExport) {
             sb.append(formatCSV(computer)).append("\n");
         }
@@ -211,7 +211,7 @@ public class InventoryController {
         StringBuilder sb = new StringBuilder();
         sb.append("INVENTARIO\n");
         sb.append(
-                "Etiqueta TI;Modelo;Marca;Estado;Usuário;Número de Série;Versão do Windows;Versão do Office;Localização;Data de Compra;Observações\n");
+                "ETIQUETA TI;NOME DO PC;USUÁRIO;LOCALIZAÇÃO;SETOR;VERSÃO DO WINDOWS;VERSÃO DO OFFICE;MODELO;NÚMERO DE SÉRIE;DATA DE COMPRA;PATRIMÔNIO;OBSERVAÇÕES\n");
         for (Computer computer : computerList) {
             sb.append(formatCSV(computer)).append("\n");
         }
@@ -277,10 +277,18 @@ public class InventoryController {
     }
 
     private String formatCSV(Computer computer) {
-        return String.format("\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\"",
-                computer.getTag(), computer.getModel(), computer.getBrand(), computer.getState(),
-                computer.getUserName(), computer.getSerialNumber(), computer.getWindowsVersion(),
-                computer.getOfficeVersion(), computer.getLocation(), computer.getPurchaseDate(),
+        return String.format("\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\"",
+                computer.getTag(),
+                computer.getHostname() != null ? computer.getHostname() : "",
+                computer.getUserName(),
+                computer.getLocation(),
+                computer.getSector() != null ? computer.getSector() : "",
+                computer.getWindowsVersion(),
+                computer.getOfficeVersion(),
+                computer.getModel(),
+                computer.getSerialNumber(),
+                computer.getPurchaseDate(),
+                computer.getPatrimony() != null ? computer.getPatrimony() : "",
                 computer.getObservation() != null ? computer.getObservation() : "");
     }
 
@@ -291,23 +299,50 @@ public class InventoryController {
 
     private Computer parseComputer(String line) {
         String[] data = line.split(";", -1);
-        String observation = "";
-        if (data.length > 10) {
-            observation = data[10].replace("\"", "");
+        // Remove aspas
+        for (int i = 0; i < data.length; i++) {
+            data[i] = data[i].replace("\"", "");
         }
-        return new Computer(
-                data[0].replace("\"", ""), // tag
-                data[1].replace("\"", ""), // model
-                data[2].replace("\"", ""), // brand
-                data[3].replace("\"", ""), // state
-                data[4].replace("\"", ""), // user
-                data[5].replace("\"", ""), // serial
-                data[6].replace("\"", ""), // win
-                data[7].replace("\"", ""), // office
-                data[9].replace("\"", ""), // purchase (index 9)
-                data[8].replace("\"", ""), // location (index 8)
-                observation // observation
-        );
+
+        // Verifica se é o novo formato (12 colunas) ou antigo (11 colunas)
+        if (data.length >= 12) {
+            return new Computer(
+                    data[0], // tag
+                    data[7], // model (agora index 7)
+                    "", // brand (removido do CSV, default vazio)
+                    "", // state (removido do CSV, default vazio)
+                    data[2], // user (index 2)
+                    data[8], // serial (index 8)
+                    data[5], // win (index 5)
+                    data[6], // office (index 6)
+                    data[9], // purchase (index 9)
+                    data[3], // location (index 3)
+                    data[11], // observation (index 11)
+                    data[1], // hostname (index 1)
+                    data[4], // sector (index 4)
+                    data[10] // patrimony (index 10)
+            );
+        } else {
+            // Formato antigo (compatibilidade)
+            String observation = "";
+            if (data.length > 10) {
+                observation = data[10];
+            }
+            return new Computer(
+                    data[0], // tag
+                    data[1], // model
+                    data[2], // brand
+                    data[3], // state
+                    data[4], // user
+                    data[5], // serial
+                    data[6], // win
+                    data[7], // office
+                    data[9], // purchase
+                    data[8], // location
+                    observation,
+                    "", "", "" // Novos campos vazios
+            );
+        }
     }
 
     private HistoryEntry parseHistory(String line) {

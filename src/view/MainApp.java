@@ -10,7 +10,6 @@ public class MainApp extends JFrame {
     private JPanel cardPanel;
 
     private LoginPanel loginPanel;
-    private LocalSelectionPanel localSelectionPanel;
     private InventoryPanel inventoryPanel;
 
     private LoginController loginController;
@@ -36,12 +35,10 @@ public class MainApp extends JFrame {
 
         // Cria os painéis passando o MainApp para facilitar a troca de telas
         loginPanel = new LoginPanel(this, loginController);
-        localSelectionPanel = new LocalSelectionPanel(this);
         inventoryPanel = new InventoryPanel(this, inventoryController);
 
         // Adiciona os painéis ao cardPanel
         cardPanel.add(loginPanel, "Login");
-        cardPanel.add(localSelectionPanel, "LocalSelection");
         cardPanel.add(inventoryPanel, "Inventory");
 
         getContentPane().add(cardPanel);
@@ -55,16 +52,11 @@ public class MainApp extends JFrame {
         cardLayout.show(cardPanel, "Login");
     }
 
-    // Exibe o painel de seleção de local e define o usuário logado
-    public void showLocalSelectionPanel(String user) {
+    // Exibe o painel de inventário e define o usuário logado
+    public void showInventoryPanel(String user) {
         currentUser = user;
         inventoryController.setCurrentUser(user);
-        cardLayout.show(cardPanel, "LocalSelection");
-    }
-
-    // Exibe o painel de inventário e aplica o filtro de local
-    public void showInventoryPanel(String location) {
-        inventoryPanel.setLocationFilter(location);
+        inventoryPanel.setLocationFilter(""); // Limpa filtro para mostrar tudo
         cardLayout.show(cardPanel, "Inventory");
     }
 
