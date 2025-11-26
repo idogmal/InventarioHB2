@@ -323,20 +323,20 @@ public class InventoryController {
         // Verifica se é o novo formato (12 colunas) ou antigo (11 colunas)
         if (data.length >= 12) {
             return new Computer(
-                    data[0], // tag
-                    data[7], // model (agora index 7)
-                    "", // brand (removido do CSV, default vazio)
-                    "", // state (removido do CSV, default vazio)
-                    data[2], // user (index 2)
-                    data[8], // serial (index 8)
+                    data[0], // etiqueta
+                    data[7], // modelo (agora index 7)
+                    "", // marca (removido do CSV, default vazio)
+                    "", // estado (removido do CSV, default vazio)
+                    data[2], // usuario (index 2)
+                    data[8], // serie (index 8)
                     data[5], // win (index 5)
                     data[6], // office (index 6)
-                    data[9], // purchase (index 9)
-                    data[3], // location (index 3)
-                    data[11], // observation (index 11)
+                    data[9], // compra (index 9)
+                    data[3], // localizacao (index 3)
+                    data[11], // observacao (index 11)
                     data[1], // hostname (index 1)
-                    data[4], // sector (index 4)
-                    data[10] // patrimony (index 10)
+                    data[4], // setor (index 4)
+                    data[10] // patrimonio (index 10)
             );
         } else {
             // Formato antigo (compatibilidade)
@@ -345,16 +345,16 @@ public class InventoryController {
                 observation = data[10];
             }
             return new Computer(
-                    data[0], // tag
-                    data[1], // model
-                    data[2], // brand
-                    data[3], // state
-                    data[4], // user
-                    data[5], // serial
+                    data[0], // etiqueta
+                    data[1], // modelo
+                    data[2], // marca
+                    data[3], // estado
+                    data[4], // usuario
+                    data[5], // serie
                     data[6], // win
                     data[7], // office
-                    data[9], // purchase
-                    data[8], // location
+                    data[9], // compra
+                    data[8], // localizacao
                     observation,
                     "", "", "" // Novos campos vazios
             );

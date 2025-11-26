@@ -1,16 +1,18 @@
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
+//DICA Para <b>Executar</b> o código, pressione <shortcut actionId="Run"/> ou
+// clique no ícone <icon src="AllIcons.Actions.Execute"/> na calha.
 public class Main {
     public static void main(String[] args) {
-        // TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the
-        // highlighted text
-        // to see how IntelliJ IDEA suggests fixing it.
+        // DICA Pressione <shortcut actionId="ShowIntentionActions"/> com o cursor no
+        // texto destacado
+        // para ver como o IntelliJ IDEA sugere corrigi-lo.
         System.out.printf("Hello and welcome!");
 
         for (int i = 1; i <= 5; i++) {
-            // TIP Press <shortcut actionId="Debug"/> to start debugging your code. We have
-            // set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/> breakpoint
-            // for you, but you can always add more by pressing <shortcut
+            // DICA Pressione <shortcut actionId="Debug"/> para iniciar a depuração do seu
+            // código. Nós
+            // definimos um ponto de interrupção <icon
+            // src="AllIcons.Debugger.Db_set_breakpoint"/>
+            // para você, mas você pode sempre adicionar mais pressionando <shortcut
             // actionId="ToggleLineBreakpoint"/>.
             System.out.println("i = " + i);
         }

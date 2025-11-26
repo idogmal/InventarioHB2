@@ -36,13 +36,14 @@ public class PlaceholderTextField extends JTextField {
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2.setColor(getDisabledTextColor());
 
-        // Calculate vertical centering
+        // Calcular centralização vertical
         int height = getHeight();
         FontMetrics fm = g2.getFontMetrics();
         int textHeight = fm.getAscent();
-        int y = (height + textHeight) / 2 - 2; // -2 for slight visual adjustment
+        int y = (height + textHeight) / 2 - 2; // -2 para leve ajuste visual
 
-        // Add some left padding (standard is usually around 2-4px + insets)
+        // Adicionar preenchimento à esquerda (padrão é geralmente cerca de 2-4px +
+        // insets)
         int x = getInsets().left;
 
         g2.drawString(placeholder, x, y);

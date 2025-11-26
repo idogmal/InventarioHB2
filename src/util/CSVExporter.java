@@ -48,16 +48,16 @@ public class CSVExporter {
                 String[] fields = parseCSVLine(line);
                 if (fields.length == 10) {
                     Computer computer = new Computer(
-                            fields[0], // tag
-                            fields[1], // model
-                            fields[2], // brand
-                            fields[3], // state
-                            fields[4], // userName
-                            fields[5], // serialNumber
-                            fields[6], // windowsVersion
-                            fields[7], // officeVersion
-                            fields[8], // location
-                            fields[9]  // purchaseDate
+                            fields[0], // etiqueta
+                            fields[1], // modelo
+                            fields[2], // marca
+                            fields[3], // estado
+                            fields[4], // usuario
+                            fields[5], // serie
+                            fields[6], // win
+                            fields[7], // office
+                            fields[8], // localizacao
+                            fields[9] // compra
                     );
                     computers.add(computer);
                 } else {
