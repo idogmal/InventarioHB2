@@ -209,6 +209,16 @@ public class Computer {
         return patrimony;
     }
 
+    private boolean isDeleted; // Flag para exclusão lógica
+
+    public boolean isDeleted() {
+        return isDeleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        isDeleted = deleted;
+    }
+
     public void setPatrimony(String patrimony) {
         this.patrimony = patrimony;
     }

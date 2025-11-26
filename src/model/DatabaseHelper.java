@@ -46,7 +46,8 @@ public class DatabaseHelper {
                 "observation TEXT, " + // Adicionado campo de observação
                 "hostname TEXT, " + // Adicionado campo hostname
                 "sector TEXT, " + // Adicionado campo setor
-                "patrimony TEXT" + // Adicionado campo patrimonio
+                "patrimony TEXT, " + // Adicionado campo patrimonio
+                "is_deleted INTEGER DEFAULT 0" + // Adicionado campo para exclusão lógica
                 ");";
 
         String userTableSQL = "CREATE TABLE IF NOT EXISTS users (" +
@@ -107,6 +108,21 @@ public class DatabaseHelper {
                 }
             }
 
+            // Migração: Verifica se a coluna 'is_deleted' existe
+            try (ResultSet rs = stmt.executeQuery("PRAGMA table_info(computers)")) {
+                boolean hasIsDeleted = false;
+                while (rs.next()) {
+                    if ("is_deleted".equalsIgnoreCase(rs.getString("name"))) {
+                        hasIsDeleted = true;
+                        break;
+                    }
+                }
+                if (!hasIsDeleted) {
+                    stmt.execute("ALTER TABLE computers ADD COLUMN is_deleted INTEGER DEFAULT 0");
+                    System.out.println("Coluna 'is_deleted' adicionada à tabela 'computers'.");
+                }
+            }
+
             System.out.println("Tabelas criadas/verificadas com sucesso.");
         } catch (SQLException e) {
             System.out.println("Erro ao criar tabelas: " + e.getMessage());
@@ -119,9 +135,9 @@ public class DatabaseHelper {
      * @param computer Computador a ser inserido.
      */
     public void insertComputer(Computer computer) {
-        String sql = "INSERT INTO computers(tag, serial_number, model, brand, state, user_name, windows_version, office_version, location, purchase_date, observation, hostname, sector, patrimony) "
+        String sql = "INSERT INTO computers(tag, serial_number, model, brand, state, user_name, windows_version, office_version, location, purchase_date, observation, hostname, sector, patrimony, is_deleted) "
                 +
-                "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = connect();
                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, computer.getTag());
@@ -138,6 +154,7 @@ public class DatabaseHelper {
             pstmt.setString(12, computer.getHostname());
             pstmt.setString(13, computer.getSector());
             pstmt.setString(14, computer.getPatrimony());
+            pstmt.setInt(15, computer.isDeleted() ? 1 : 0);
             pstmt.executeUpdate();
             System.out.println("Computador inserido com sucesso.");
         } catch (SQLException e) {
@@ -146,27 +163,50 @@ public class DatabaseHelper {
     }
 
     /**
-     * Exclui um computador do banco de dados.
-     * Utiliza o ID para identificar o registro.
+     * Realiza a exclusão lógica de um computador.
      *
      * @param computer Computador a ser removido.
-     * @return true se o registro foi removido com sucesso, caso contrário false.
+     * @return true se o registro foi atualizado com sucesso, caso contrário false.
      */
     public boolean deleteComputer(Computer computer) {
-        String sql = "DELETE FROM computers WHERE id = ?";
+        String sql = "UPDATE computers SET is_deleted = 1 WHERE id = ?";
         try (Connection conn = connect();
                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, computer.getId());
             int rowsAffected = pstmt.executeUpdate();
             if (rowsAffected > 0) {
-                System.out.println("Computador deletado com sucesso.");
+                System.out.println("Computador movido para a lixeira.");
                 return true;
             } else {
-                System.out.println("Nenhum computador foi deletado.");
+                System.out.println("Nenhum computador foi movido para a lixeira.");
                 return false;
             }
         } catch (SQLException e) {
-            System.out.println("Erro ao excluir computador: " + e.getMessage());
+            System.out.println("Erro ao excluir (soft delete) computador: " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Restaura um computador da lixeira.
+     *
+     * @param computer Computador a ser restaurado.
+     * @return true se restaurado com sucesso.
+     */
+    public boolean restoreComputer(Computer computer) {
+        String sql = "UPDATE computers SET is_deleted = 0 WHERE id = ?";
+        try (Connection conn = connect();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, computer.getId());
+            int rowsAffected = pstmt.executeUpdate();
+            if (rowsAffected > 0) {
+                System.out.println("Computador restaurado com sucesso.");
+                return true;
+            } else {
+                return false;
+            }
+        } catch (SQLException e) {
+            System.out.println("Erro ao restaurar computador: " + e.getMessage());
             return false;
         }
     }
@@ -360,7 +400,7 @@ public class DatabaseHelper {
      */
     public List<Computer> loadComputers() {
         List<Computer> computers = new ArrayList<>();
-        String sql = "SELECT id, tag, serial_number, model, brand, state, user_name, windows_version, office_version, location, purchase_date, observation, hostname, sector, patrimony FROM computers";
+        String sql = "SELECT id, tag, serial_number, model, brand, state, user_name, windows_version, office_version, location, purchase_date, observation, hostname, sector, patrimony, is_deleted FROM computers WHERE is_deleted = 0";
         try (Connection conn = connect();
                 PreparedStatement stmt = conn.prepareStatement(sql);
                 ResultSet rs = stmt.executeQuery()) {
@@ -381,10 +421,43 @@ public class DatabaseHelper {
                         rs.getString("hostname"),
                         rs.getString("sector"),
                         rs.getString("patrimony"));
+                computer.setDeleted(rs.getInt("is_deleted") == 1);
                 computers.add(computer);
             }
         } catch (SQLException e) {
             System.out.println("Erro ao carregar computadores: " + e.getMessage());
+        }
+        return computers;
+    }
+
+    public List<Computer> loadDeletedComputers() {
+        List<Computer> computers = new ArrayList<>();
+        String sql = "SELECT id, tag, serial_number, model, brand, state, user_name, windows_version, office_version, location, purchase_date, observation, hostname, sector, patrimony, is_deleted FROM computers WHERE is_deleted = 1";
+        try (Connection conn = connect();
+                PreparedStatement stmt = conn.prepareStatement(sql);
+                ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                Computer computer = new Computer(
+                        rs.getInt("id"),
+                        rs.getString("tag"),
+                        rs.getString("model"),
+                        rs.getString("brand"),
+                        rs.getString("state"),
+                        rs.getString("user_name"),
+                        rs.getString("serial_number"),
+                        rs.getString("windows_version"),
+                        rs.getString("office_version"),
+                        rs.getString("purchase_date"),
+                        rs.getString("location"),
+                        rs.getString("observation"),
+                        rs.getString("hostname"),
+                        rs.getString("sector"),
+                        rs.getString("patrimony"));
+                computer.setDeleted(rs.getInt("is_deleted") == 1);
+                computers.add(computer);
+            }
+        } catch (SQLException e) {
+            System.out.println("Erro ao carregar computadores excluídos: " + e.getMessage());
         }
         return computers;
     }

@@ -63,7 +63,7 @@ public class InventoryPanel extends JPanel {
         gbcTop.anchor = GridBagConstraints.CENTER; // Centraliza
         topPanel.add(computerCountLabel, gbcTop);
 
-        searchField = new JTextField(25); // Campo de busca
+        searchField = new PlaceholderTextField("Pesquisar...", 25); // Campo de busca com placeholder
         searchField.setToolTipText("Buscar por etiqueta, modelo, marca ou usuário");
         gbcTop.gridx = 0;
         gbcTop.gridy = 1; // Segunda linha
@@ -137,6 +137,15 @@ public class InventoryPanel extends JPanel {
         leftButtonPanel.add(historyButton);
         leftButtonPanel.add(Box.createRigidArea(new Dimension(0, 8)));
         leftButtonPanel.add(manageUsersButton);
+        leftButtonPanel.add(Box.createRigidArea(new Dimension(0, 20))); // Espaço maior
+
+        JButton recycleBinButton = new JButton("Lixeira");
+        recycleBinButton.setPreferredSize(buttonMaxDim);
+        recycleBinButton.setMaximumSize(buttonMaxDim);
+        recycleBinButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        recycleBinButton.addActionListener(e -> openRecycleBinWindow());
+        leftButtonPanel.add(recycleBinButton);
+
         leftButtonPanel.add(Box.createVerticalGlue()); // Empurra os botões para cima
 
         add(leftButtonPanel, BorderLayout.WEST); // Adiciona o painel de botões à Esquerda
@@ -206,11 +215,18 @@ public class InventoryPanel extends JPanel {
                 int selectedRowModel = table.convertRowIndexToModel(selectedRowView);
                 Computer selectedComputer = tableModel.getComputerAt(selectedRowModel);
                 if (selectedComputer != null) {
-                    // NENHUMA confirmação extra adicionada, mantendo lógica original
-                    controller.deleteComputer(selectedComputer, controller.getCurrentUser());
-                    controller.refreshComputers();
-                    filterTable();
-                    // updateComputerCountLabel();
+                    // Confirmação de exclusão
+                    int option = JOptionPane.showConfirmDialog(this,
+                            "Tem certeza que deseja mover o computador " + selectedComputer.getTag()
+                                    + " para a lixeira?",
+                            "Confirmar Exclusão",
+                            JOptionPane.YES_NO_OPTION);
+
+                    if (option == JOptionPane.YES_OPTION) {
+                        controller.deleteComputer(selectedComputer, controller.getCurrentUser());
+                        controller.refreshComputers();
+                        filterTable();
+                    }
                 } else {
                     JOptionPane.showMessageDialog(this, "Não foi possível obter os dados do computador selecionado.",
                             "Erro", JOptionPane.ERROR_MESSAGE);
@@ -266,7 +282,29 @@ public class InventoryPanel extends JPanel {
                             (computer.getModel() != null && computer.getModel().toLowerCase().contains(finalQuery)) ||
                             (computer.getBrand() != null && computer.getBrand().toLowerCase().contains(finalQuery)) ||
                             (computer.getUserName() != null
-                                    && computer.getUserName().toLowerCase().contains(finalQuery)))
+                                    && computer.getUserName().toLowerCase().contains(finalQuery))
+                            ||
+                            (computer.getLocation() != null
+                                    && computer.getLocation().toLowerCase().contains(finalQuery))
+                            ||
+                            (computer.getSector() != null && computer.getSector().toLowerCase().contains(finalQuery)) ||
+                            (computer.getWindowsVersion() != null
+                                    && computer.getWindowsVersion().toLowerCase().contains(finalQuery))
+                            ||
+                            (computer.getOfficeVersion() != null
+                                    && computer.getOfficeVersion().toLowerCase().contains(finalQuery))
+                            ||
+                            (computer.getSerialNumber() != null
+                                    && computer.getSerialNumber().toLowerCase().contains(finalQuery))
+                            ||
+                            (computer.getPurchaseDate() != null
+                                    && computer.getPurchaseDate().toLowerCase().contains(finalQuery))
+                            ||
+                            (computer.getPatrimony() != null
+                                    && computer.getPatrimony().toLowerCase().contains(finalQuery))
+                            ||
+                            (computer.getObservation() != null
+                                    && computer.getObservation().toLowerCase().contains(finalQuery)))
                     .collect(Collectors.toList());
         }
 
@@ -584,6 +622,50 @@ public class InventoryPanel extends JPanel {
 
         JPanel buttonPanel = new JPanel();
         buttonPanel.add(saveButton);
+        dialog.add(buttonPanel, BorderLayout.SOUTH);
+
+        dialog.setVisible(true);
+    }
+
+    private void openRecycleBinWindow() {
+        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Lixeira", true);
+        dialog.setSize(800, 600);
+        dialog.setLocationRelativeTo(this);
+        dialog.setLayout(new BorderLayout());
+
+        // Modelo da tabela para a lixeira (sem edição)
+        ComputerTableModel recycleBinModel = new ComputerTableModel(controller.getDeletedComputers());
+        JTable recycleBinTable = new JTable(recycleBinModel);
+        recycleBinTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        recycleBinTable.setAutoCreateRowSorter(true);
+
+        JScrollPane scrollPane = new JScrollPane(recycleBinTable);
+        dialog.add(scrollPane, BorderLayout.CENTER);
+
+        JButton restoreButton = new JButton("Restaurar");
+        restoreButton.addActionListener(e -> {
+            int selectedRowView = recycleBinTable.getSelectedRow();
+            if (selectedRowView >= 0) {
+                int selectedRowModel = recycleBinTable.convertRowIndexToModel(selectedRowView);
+                Computer selectedComputer = recycleBinModel.getComputerAt(selectedRowModel);
+                if (selectedComputer != null) {
+                    controller.restoreComputer(selectedComputer, controller.getCurrentUser());
+                    // Atualiza a tabela da lixeira
+                    recycleBinModel.setComputers(controller.getDeletedComputers());
+                    // Atualiza a tabela principal (se estiver visível por trás)
+                    controller.refreshComputers();
+                    filterTable();
+                    JOptionPane.showMessageDialog(dialog, "Computador restaurado com sucesso!", "Sucesso",
+                            JOptionPane.INFORMATION_MESSAGE);
+                }
+            } else {
+                JOptionPane.showMessageDialog(dialog, "Selecione um computador para restaurar.", "Aviso",
+                        JOptionPane.WARNING_MESSAGE);
+            }
+        });
+
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(restoreButton);
         dialog.add(buttonPanel, BorderLayout.SOUTH);
 
         dialog.setVisible(true);

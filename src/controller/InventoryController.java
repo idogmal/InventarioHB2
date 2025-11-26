@@ -162,15 +162,31 @@ public class InventoryController {
 
     public void deleteComputer(Computer computer, String user) {
         if (isValidUser(user)) {
-            // Tenta remover do banco de dados
+            // Tenta remover do banco de dados (soft delete)
             if (dbHelper.deleteComputer(computer)) {
-                // Se remover do banco, remove da lista em memória e registra o histórico
+                // Remove da lista principal
                 computerList.remove(computer);
-                addHistory(ActionType.EXCLUIR, user, "Excluído computador: " + computer.getTag());
+                addHistory(ActionType.EXCLUIR, user, "Movido para a lixeira: " + computer.getTag());
             } else {
-                log("Erro ao remover o computador do banco.");
+                log("Erro ao mover o computador para a lixeira.");
             }
         }
+    }
+
+    public void restoreComputer(Computer computer, String user) {
+        if (isValidUser(user)) {
+            if (dbHelper.restoreComputer(computer)) {
+                computer.setDeleted(false);
+                computerList.add(computer);
+                addHistory(ActionType.EDITAR, user, "Restaurado da lixeira: " + computer.getTag());
+            } else {
+                log("Erro ao restaurar o computador.");
+            }
+        }
+    }
+
+    public List<Computer> getDeletedComputers() {
+        return dbHelper.loadDeletedComputers();
     }
 
     public List<Computer> searchComputers(String query) {
