@@ -212,6 +212,18 @@ public class InventoryController {
                 .collect(Collectors.toList());
     }
 
+    public List<String> getCompanies() {
+        return dbHelper.getCompanies();
+    }
+
+    public boolean addCompany(String name) {
+        return dbHelper.addCompany(name);
+    }
+
+    public boolean deleteCompany(String name) {
+        return dbHelper.deleteCompany(name);
+    }
+
     public void exportToCSV(List<Computer> computersToExport, String filePath) throws IOException {
         StringBuilder sb = new StringBuilder();
         sb.append(

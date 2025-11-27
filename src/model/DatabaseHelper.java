@@ -65,11 +65,27 @@ public class DatabaseHelper {
                 "description TEXT" +
                 ");";
 
+        // Nova tabela para empresas
+        String companiesTableSQL = "CREATE TABLE IF NOT EXISTS companies (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "name TEXT UNIQUE NOT NULL" +
+                ");";
+
         try (Connection conn = connect();
                 Statement stmt = conn.createStatement()) {
             stmt.execute(computerTableSQL);
             stmt.execute(userTableSQL);
             stmt.execute(historyTableSQL);
+            stmt.execute(companiesTableSQL);
+
+            // Migração: Popula empresas padrão se a tabela estiver vazia
+            try (ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM companies")) {
+                if (rs.next() && rs.getInt(1) == 0) {
+                    stmt.execute("INSERT INTO companies (name) VALUES ('NPD')");
+                    stmt.execute("INSERT INTO companies (name) VALUES ('INFAN')");
+                    System.out.println("Empresas padrão (NPD, INFAN) inseridas.");
+                }
+            }
 
             // Migração: Verifica se a coluna 'observation' existe na tabela 'computers'
             try (ResultSet rs = stmt.executeQuery("PRAGMA table_info(computers)")) {
@@ -505,6 +521,65 @@ public class DatabaseHelper {
             System.out.println("Erro ao carregar histórico: " + e.getMessage());
         }
         return historyList;
+    }
+
+    /**
+     * Retorna uma lista de nomes de empresas.
+     *
+     * @return Lista de nomes de empresas.
+     */
+    public List<String> getCompanies() {
+        List<String> companies = new ArrayList<>();
+        String sql = "SELECT name FROM companies";
+        try (Connection conn = connect();
+                PreparedStatement stmt = conn.prepareStatement(sql);
+                ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                companies.add(rs.getString("name"));
+            }
+        } catch (SQLException e) {
+            System.out.println("Erro ao obter lista de empresas: " + e.getMessage());
+        }
+        return companies;
+    }
+
+    /**
+     * Adiciona uma nova empresa.
+     *
+     * @param name Nome da empresa.
+     * @return true se inserido com sucesso, caso contrário false.
+     */
+    public boolean addCompany(String name) {
+        String sql = "INSERT INTO companies(name) VALUES(?)";
+        try (Connection conn = connect();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, name);
+            pstmt.executeUpdate();
+            System.out.println("Empresa inserida com sucesso: " + name);
+            return true;
+        } catch (SQLException e) {
+            System.out.println("Erro ao inserir empresa: " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Exclui uma empresa.
+     *
+     * @param name Nome da empresa.
+     * @return true se excluído com sucesso, caso contrário false.
+     */
+    public boolean deleteCompany(String name) {
+        String sql = "DELETE FROM companies WHERE name = ?";
+        try (Connection conn = connect();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, name);
+            int rowsAffected = pstmt.executeUpdate();
+            return rowsAffected > 0;
+        } catch (SQLException e) {
+            System.out.println("Erro ao excluir empresa: " + e.getMessage());
+            return false;
+        }
     }
 
 }

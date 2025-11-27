@@ -32,8 +32,44 @@ public class ComputerFormHandler {
         JTextField windowsField = new JTextField(20);
         JTextField officeField = new JTextField(20);
         // Para o campo de localização, utiliza JComboBox
-        String[] locations = { "NPD", "INFAN" };
-        JComboBox<String> locationComboBox = new JComboBox<>(locations);
+        // Para o campo de localização, utiliza JComboBox
+        JComboBox<String> locationComboBox = new JComboBox<>();
+        loadLocations(locationComboBox);
+        locationComboBox.setRenderer(new CompanyListCellRenderer());
+
+        // Adiciona MouseListener ao popup do JComboBox para detectar cliques no "X"
+        locationComboBox.addPopupMenuListener(new javax.swing.event.PopupMenuListener() {
+            @Override
+            public void popupMenuWillBecomeVisible(javax.swing.event.PopupMenuEvent e) {
+                JComboBox<?> combo = (JComboBox<?>) e.getSource();
+                Object child = combo.getUI().getAccessibleChild(combo, 0);
+                if (child instanceof JPopupMenu) {
+                    JScrollPane scrollPane = (JScrollPane) ((JPopupMenu) child).getComponent(0);
+                    JList<?> list = (JList<?>) scrollPane.getViewport().getView();
+
+                    // Remove listeners anteriores para evitar duplicação
+                    for (java.awt.event.MouseListener ml : list.getMouseListeners()) {
+                        if (ml instanceof CompanyDeleteMouseListener) {
+                            list.removeMouseListener(ml);
+                        }
+                    }
+                    list.addMouseListener(new CompanyDeleteMouseListener(list, locationComboBox, dialog));
+                }
+            }
+
+            @Override
+            public void popupMenuWillBecomeInvisible(javax.swing.event.PopupMenuEvent e) {
+            }
+
+            @Override
+            public void popupMenuCanceled(javax.swing.event.PopupMenuEvent e) {
+            }
+        });
+
+        // JPanel locationPanel = new JPanel(new BorderLayout()); // Removido painel
+        // auxiliar
+        // locationPanel.add(locationComboBox, BorderLayout.CENTER); // Removido
+        // locationPanel.add(deleteCompanyButton, BorderLayout.EAST); // Removido
         JTextField purchaseField = new JTextField(20);
 
         // Se for edição, preenche os campos com os dados do computador
@@ -204,6 +240,27 @@ public class ComputerFormHandler {
                 System.out.println("Computador atualizado: " + updatedComputer);
             }
             dialog.dispose();
+            dialog.dispose();
+        });
+
+        // Ação do ComboBox para detectar seleção de "+"
+        locationComboBox.addActionListener(e -> {
+            String selected = (String) locationComboBox.getSelectedItem();
+            if ("+".equals(selected)) {
+                String newCompany = JOptionPane.showInputDialog(dialog, "Nome da nova empresa:", "Cadastrar Empresa",
+                        JOptionPane.PLAIN_MESSAGE);
+                if (newCompany != null && !newCompany.trim().isEmpty()) {
+                    if (controller.addCompany(newCompany.trim().toUpperCase())) {
+                        loadLocations(locationComboBox);
+                        locationComboBox.setSelectedItem(newCompany.trim().toUpperCase());
+                    } else {
+                        showAlert("Erro", "Não foi possível cadastrar a empresa. Verifique se já existe.");
+                        locationComboBox.setSelectedIndex(0); // Volta para o primeiro item
+                    }
+                } else {
+                    locationComboBox.setSelectedIndex(0); // Cancelou ou vazio
+                }
+            }
         });
 
         dialog.pack(); // Ajusta o tamanho do dialog ao conteúdo
@@ -232,7 +289,119 @@ public class ComputerFormHandler {
         purchaseField.setText(computer.getPurchaseDate());
     }
 
+    private void loadLocations(JComboBox<String> comboBox) {
+        comboBox.removeAllItems();
+        java.util.List<String> companies = controller.getCompanies();
+        for (String company : companies) {
+            comboBox.addItem(company);
+        }
+        comboBox.addItem("+"); // Opção para adicionar nova
+    }
+
     private void showAlert(String title, String message) {
         JOptionPane.showMessageDialog(null, message, title, JOptionPane.ERROR_MESSAGE);
+    }
+
+    // Custom Renderer para exibir o "X" de exclusão
+    private static class CompanyListCellRenderer extends JPanel implements ListCellRenderer<String> {
+        private final JLabel nameLabel = new JLabel();
+        private final JLabel deleteLabel = new JLabel("X");
+
+        public CompanyListCellRenderer() {
+            setLayout(new BorderLayout());
+            setOpaque(true);
+            add(nameLabel, BorderLayout.CENTER);
+            deleteLabel.setForeground(Color.RED);
+            deleteLabel.setFont(deleteLabel.getFont().deriveFont(Font.BOLD));
+            deleteLabel.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 5));
+            add(deleteLabel, BorderLayout.EAST);
+        }
+
+        @Override
+        public Component getListCellRendererComponent(JList<? extends String> list, String value, int index,
+                boolean isSelected, boolean cellHasFocus) {
+            nameLabel.setText(value);
+
+            // Configura cores
+            if (isSelected) {
+                setBackground(list.getSelectionBackground());
+                setForeground(list.getSelectionForeground());
+                nameLabel.setForeground(list.getSelectionForeground());
+            } else {
+                setBackground(list.getBackground());
+                setForeground(list.getForeground());
+                nameLabel.setForeground(list.getForeground());
+            }
+
+            // Estilização especial para o item "+"
+            if ("+".equals(value)) {
+                nameLabel.setForeground(Color.GRAY); // Deixa o "+" mais claro (cinza)
+                nameLabel.setFont(nameLabel.getFont().deriveFont(Font.BOLD)); // Opcional: negrito
+                deleteLabel.setVisible(false);
+            } else {
+                // Reseta para o padrão (necessário pois o renderer é reutilizado)
+                if (!isSelected) {
+                    nameLabel.setForeground(list.getForeground());
+                }
+                nameLabel.setFont(list.getFont());
+
+                // Mostra o "X" apenas se não for null (item vazio) e se estiver na lista (index
+                // >= 0)
+                // index -1 indica que é o item selecionado exibido no próprio combo box
+                if (value == null || index == -1) {
+                    deleteLabel.setVisible(false);
+                } else {
+                    deleteLabel.setVisible(true);
+                }
+            }
+
+            return this;
+        }
+    }
+
+    // Listener para tratar cliques no "X" dentro da lista
+    private class CompanyDeleteMouseListener extends java.awt.event.MouseAdapter {
+        private final JList<?> list;
+        private final JComboBox<String> comboBox;
+        private final JDialog parentDialog;
+
+        public CompanyDeleteMouseListener(JList<?> list, JComboBox<String> comboBox, JDialog parentDialog) {
+            this.list = list;
+            this.comboBox = comboBox;
+            this.parentDialog = parentDialog;
+        }
+
+        @Override
+        public void mouseReleased(java.awt.event.MouseEvent e) {
+            Point p = e.getPoint();
+            int index = list.locationToIndex(p);
+            if (index >= 0) {
+                String value = (String) list.getModel().getElementAt(index);
+                if ("+".equals(value))
+                    return;
+
+                // Verifica se o clique foi na área do "X" (lado direito)
+                Rectangle cellBounds = list.getCellBounds(index, index);
+                if (cellBounds != null && cellBounds.contains(p)) {
+                    // Assume que o "X" ocupa os últimos 30 pixels
+                    if (p.x > cellBounds.x + cellBounds.width - 30) {
+                        e.consume(); // Tenta impedir a seleção do item
+
+                        int confirm = JOptionPane.showConfirmDialog(parentDialog,
+                                "Tem certeza que deseja excluir a empresa '" + value + "'?",
+                                "Excluir Empresa", JOptionPane.YES_NO_OPTION);
+                        if (confirm == JOptionPane.YES_OPTION) {
+                            if (controller.deleteCompany(value)) {
+                                loadLocations(comboBox);
+                                // Fecha o popup para atualizar visualmente
+                                comboBox.setPopupVisible(false);
+                            } else {
+                                showAlert("Erro", "Não foi possível excluir a empresa.");
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
