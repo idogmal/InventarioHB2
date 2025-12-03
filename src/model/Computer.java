@@ -1,5 +1,10 @@
 package model;
 
+import java.time.LocalDate;
+import java.time.Period;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+
 /**
  * Classe Computer representa um computador no sistema de inventário.
  */
@@ -221,6 +226,72 @@ public class Computer {
 
     public void setPatrimony(String patrimony) {
         this.patrimony = patrimony;
+    }
+
+    /**
+     * Calcula o tempo de uso do computador com base na data de compra.
+     * Retorna uma string formatada (ex: "2a 5m") ou "-" se inválido.
+     */
+    public String getUsageTime() {
+        if (purchaseDate == null || purchaseDate.trim().isEmpty() || purchaseDate.contains("_")) {
+            return "-";
+        }
+        try {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            LocalDate purchase = LocalDate.parse(purchaseDate, formatter);
+            LocalDate now = LocalDate.now();
+
+            if (purchase.isAfter(now)) {
+                return "0m"; // Data futura
+            }
+
+            Period period = Period.between(purchase, now);
+            int years = period.getYears();
+            int months = period.getMonths();
+
+            if (years > 0) {
+                return years + "a " + months + "m";
+            } else {
+                return months + "m";
+            }
+        } catch (DateTimeParseException e) {
+            return "-";
+        }
+    }
+
+    /**
+     * Retorna o tempo de uso detalhado para tooltip.
+     * Ex: "2 anos, 5 meses e 12 dias"
+     */
+    public String getDetailedUsageTime() {
+        if (purchaseDate == null || purchaseDate.trim().isEmpty() || purchaseDate.contains("_")) {
+            return "Data de compra não informada";
+        }
+        try {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            LocalDate purchase = LocalDate.parse(purchaseDate, formatter);
+            LocalDate now = LocalDate.now();
+
+            if (purchase.isAfter(now)) {
+                return "Data de compra futura";
+            }
+
+            Period period = Period.between(purchase, now);
+            int years = period.getYears();
+            int months = period.getMonths();
+            int days = period.getDays();
+
+            StringBuilder sb = new StringBuilder();
+            if (years > 0)
+                sb.append(years).append(years == 1 ? " ano, " : " anos, ");
+            if (months > 0)
+                sb.append(months).append(months == 1 ? " mês e " : " meses e ");
+            sb.append(days).append(days == 1 ? " dia" : " dias");
+
+            return sb.toString();
+        } catch (DateTimeParseException e) {
+            return "Data inválida";
+        }
     }
 
     @Override

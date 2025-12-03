@@ -6,7 +6,7 @@ import java.util.List;
 
 public class ComputerTableModel extends AbstractTableModel {
     private final String[] columnNames = { "ETIQUETA-TI", "NOME DO PC", "USUÁRIO", "LOCALIZACAO", "SETOR",
-            "VERSAO SO", "VERSAO OFFICE", "MODELO", "Nº SERIE", "DATA DE COMPRA", "PATRIMONIO", "OBS" };
+            "VERSAO SO", "VERSAO OFFICE", "MODELO", "Nº SERIE", "DATA DE COMPRA", "TEMPO DE USO", "PATRIMONIO", "OBS" };
     private List<Computer> computers;
 
     public ComputerTableModel(List<Computer> computers) {
@@ -62,8 +62,10 @@ public class ComputerTableModel extends AbstractTableModel {
             case 9:
                 return c.getPurchaseDate();
             case 10:
-                return c.getPatrimony();
+                return c.getUsageTime();
             case 11:
+                return c.getPatrimony();
+            case 12:
                 return "Ver/Editar"; // Botão
             default:
                 return "";
@@ -72,6 +74,6 @@ public class ComputerTableModel extends AbstractTableModel {
 
     @Override
     public boolean isCellEditable(int rowIndex, int columnIndex) {
-        return columnIndex == 11; // Apenas a coluna de observações é editável (para o botão funcionar)
+        return columnIndex == 12; // Apenas a coluna de observações é editável (para o botão funcionar)
     }
 }

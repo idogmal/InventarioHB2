@@ -4,6 +4,7 @@ import controller.InventoryController;
 import model.Computer;
 
 import javax.swing.*;
+import javax.swing.text.MaskFormatter;
 import java.awt.*;
 
 public class ComputerFormHandler {
@@ -70,7 +71,17 @@ public class ComputerFormHandler {
         // auxiliar
         // locationPanel.add(locationComboBox, BorderLayout.CENTER); // Removido
         // locationPanel.add(deleteCompanyButton, BorderLayout.EAST); // Removido
-        JTextField purchaseField = new JTextField(20);
+
+        // Configuração do Campo com Máscara
+        JFormattedTextField purchaseFieldTemp = null;
+        try {
+            MaskFormatter dateMask = new MaskFormatter("##/##/####");
+            dateMask.setPlaceholderCharacter('_');
+            purchaseFieldTemp = new JFormattedTextField(dateMask);
+        } catch (java.text.ParseException e) {
+            e.printStackTrace();
+        }
+        final JFormattedTextField purchaseField = purchaseFieldTemp;
 
         // Se for edição, preenche os campos com os dados do computador
         if (computer != null) {
@@ -199,6 +210,13 @@ public class ComputerFormHandler {
                 showAlert("Erro", "Os campos 'Etiqueta TI' e 'Usuário' não podem estar vazios.");
                 return;
             }
+
+            String dateText = purchaseField.getText();
+            if (!isValidDate(dateText)) {
+                showAlert("Erro", "Data inválida. Use o formato dd/MM/yyyy e certifique-se que a data existe.");
+                return;
+            }
+
             if (computer == null) {
                 // Adiciona um novo computador
                 Computer newComputer = new Computer(
@@ -210,7 +228,7 @@ public class ComputerFormHandler {
                         serialField.getText(),
                         windowsField.getText(),
                         officeField.getText(),
-                        purchaseField.getText(),
+                        dateText,
                         (String) locationComboBox.getSelectedItem(),
                         "", // Observation (inicialmente vazio)
                         hostnameField.getText(),
@@ -230,7 +248,7 @@ public class ComputerFormHandler {
                         serialField.getText(),
                         windowsField.getText(),
                         officeField.getText(),
-                        purchaseField.getText(),
+                        dateText,
                         (String) locationComboBox.getSelectedItem(),
                         computer.getObservation(), // Preserva observação
                         hostnameField.getText(),
@@ -271,7 +289,7 @@ public class ComputerFormHandler {
     private void populateFields(Computer computer, JTextField tagField, JTextField hostnameField, JTextField userField,
             JTextField sectorField, JTextField patrimonyField, JTextField modelField, JTextField serialField,
             JTextField windowsField, JTextField officeField, JComboBox<String> locationComboBox,
-            JTextField purchaseField) {
+            JFormattedTextField purchaseField) {
         tagField.setText(computer.getTag());
         hostnameField.setText(computer.getHostname());
         userField.setText(computer.getUserName());
@@ -286,7 +304,27 @@ public class ComputerFormHandler {
         if (loc != null) {
             locationComboBox.setSelectedItem(loc);
         }
-        purchaseField.setText(computer.getPurchaseDate());
+        if (computer.getPurchaseDate() != null && !computer.getPurchaseDate().isEmpty()) {
+            purchaseField.setText(computer.getPurchaseDate());
+        } else {
+            // Se vazio, pode definir a data atual ou deixar em branco (máscara)
+            // purchaseField.setValue(new java.util.Date()); // Se quiser preencher com hoje
+            // Deixando vazio (com máscara)
+            purchaseField.setText("");
+        }
+    }
+
+    private boolean isValidDate(String dateStr) {
+        if (dateStr == null || dateStr.contains("_"))
+            return false; // Incompleto
+        try {
+            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy");
+            sdf.setLenient(false);
+            sdf.parse(dateStr);
+            return true;
+        } catch (java.text.ParseException e) {
+            return false;
+        }
     }
 
     private void loadLocations(JComboBox<String> comboBox) {

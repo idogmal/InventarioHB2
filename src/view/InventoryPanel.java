@@ -81,10 +81,25 @@ public class InventoryPanel extends JPanel {
         table.setAutoCreateRowSorter(true); // Habilita ordenação
         table.setFillsViewportHeight(true); // Ocupa altura disponível
 
-        // Configura o renderizador e editor para a coluna de observações (índice 11 -
+        // Configura o renderizador e editor para a coluna de observações (índice 12 -
         // OBS)
         table.getColumn("OBS").setCellRenderer(new ButtonRenderer());
         table.getColumn("OBS").setCellEditor(new ButtonEditor(new JCheckBox()));
+
+        // Configura tooltip para a coluna "TEMPO DE USO" (índice 10)
+        table.getColumn("TEMPO DE USO").setCellRenderer(new javax.swing.table.DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
+                    boolean hasFocus, int row, int column) {
+                Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                if (c instanceof JComponent) {
+                    int modelRow = table.convertRowIndexToModel(row);
+                    Computer computer = tableModel.getComputerAt(modelRow);
+                    ((JComponent) c).setToolTipText(computer.getDetailedUsageTime());
+                }
+                return c;
+            }
+        });
 
         JScrollPane tableScrollPane = new JScrollPane(table);
         add(tableScrollPane, BorderLayout.CENTER); // Adiciona tabela ao Centro

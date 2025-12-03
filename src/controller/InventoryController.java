@@ -227,7 +227,7 @@ public class InventoryController {
     public void exportToCSV(List<Computer> computersToExport, String filePath) throws IOException {
         StringBuilder sb = new StringBuilder();
         sb.append(
-                "ETIQUETA TI;NOME DO PC;USUÁRIO;LOCALIZAÇÃO;SETOR;VERSÃO DO WINDOWS;VERSÃO DO OFFICE;MODELO;NÚMERO DE SÉRIE;DATA DE COMPRA;PATRIMÔNIO;OBSERVAÇÕES\n");
+                "ETIQUETA TI;NOME DO PC;USUÁRIO;LOCALIZAÇÃO;SETOR;VERSÃO DO WINDOWS;VERSÃO DO OFFICE;MODELO;NÚMERO DE SÉRIE;DATA DE COMPRA;TEMPO DE USO;PATRIMÔNIO;OBSERVAÇÕES\n");
         for (Computer computer : computersToExport) {
             sb.append(formatCSV(computer)).append("\n");
         }
@@ -239,7 +239,7 @@ public class InventoryController {
         StringBuilder sb = new StringBuilder();
         sb.append("INVENTARIO\n");
         sb.append(
-                "ETIQUETA TI;NOME DO PC;USUÁRIO;LOCALIZAÇÃO;SETOR;VERSÃO DO WINDOWS;VERSÃO DO OFFICE;MODELO;NÚMERO DE SÉRIE;DATA DE COMPRA;PATRIMÔNIO;OBSERVAÇÕES\n");
+                "ETIQUETA TI;NOME DO PC;USUÁRIO;LOCALIZAÇÃO;SETOR;VERSÃO DO WINDOWS;VERSÃO DO OFFICE;MODELO;NÚMERO DE SÉRIE;DATA DE COMPRA;TEMPO DE USO;PATRIMÔNIO;OBSERVAÇÕES\n");
         for (Computer computer : computerList) {
             sb.append(formatCSV(computer)).append("\n");
         }
@@ -305,7 +305,8 @@ public class InventoryController {
     }
 
     private String formatCSV(Computer computer) {
-        return String.format("\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\"",
+        return String.format(
+                "\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\"",
                 computer.getTag(),
                 computer.getHostname() != null ? computer.getHostname() : "",
                 computer.getUserName(),
@@ -316,6 +317,7 @@ public class InventoryController {
                 computer.getModel(),
                 computer.getSerialNumber(),
                 computer.getPurchaseDate(),
+                computer.getDetailedUsageTime(),
                 computer.getPatrimony() != null ? computer.getPatrimony() : "",
                 computer.getObservation() != null ? computer.getObservation() : "");
     }
@@ -332,23 +334,41 @@ public class InventoryController {
             data[i] = data[i].replace("\"", "");
         }
 
-        // Verifica se é o novo formato (12 colunas) ou antigo (11 colunas)
-        if (data.length >= 12) {
+        // Verifica se é o novo formato com Tempo de Uso (13 colunas)
+        if (data.length >= 13) {
             return new Computer(
                     data[0], // etiqueta
-                    data[7], // modelo (agora index 7)
-                    "", // marca (removido do CSV, default vazio)
-                    "", // estado (removido do CSV, default vazio)
-                    data[2], // usuario (index 2)
-                    data[8], // serie (index 8)
-                    data[5], // win (index 5)
-                    data[6], // office (index 6)
-                    data[9], // compra (index 9)
-                    data[3], // localizacao (index 3)
-                    data[11], // observacao (index 11)
-                    data[1], // hostname (index 1)
-                    data[4], // setor (index 4)
-                    data[10] // patrimonio (index 10)
+                    data[7], // modelo
+                    "", // marca
+                    "", // estado
+                    data[2], // usuario
+                    data[8], // serie
+                    data[5], // win
+                    data[6], // office
+                    data[9], // compra
+                    data[3], // localizacao
+                    data[12], // observacao (index 12)
+                    data[1], // hostname
+                    data[4], // setor
+                    data[11] // patrimonio (index 11)
+            );
+        } else if (data.length >= 12) {
+            // Formato anterior (sem Tempo de Uso, mas com Patrimonio)
+            return new Computer(
+                    data[0], // etiqueta
+                    data[7], // modelo
+                    "", // marca
+                    "", // estado
+                    data[2], // usuario
+                    data[8], // serie
+                    data[5], // win
+                    data[6], // office
+                    data[9], // compra
+                    data[3], // localizacao
+                    data[11], // observacao
+                    data[1], // hostname
+                    data[4], // setor
+                    data[10] // patrimonio
             );
         } else {
             // Formato antigo (compatibilidade)
