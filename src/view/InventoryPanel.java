@@ -76,11 +76,16 @@ public class InventoryPanel extends JPanel {
         add(topPanel, BorderLayout.NORTH); // Adiciona painel superior ao Norte
 
         // --- Tabela (Central) ---
+
         table = new JTable(tableModel);
         table.getTableHeader().setFont(table.getTableHeader().getFont().deriveFont(Font.BOLD)); // Cabeçalho em negrito
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.setAutoCreateRowSorter(true); // Habilita ordenação
+
         table.setFillsViewportHeight(true); // Ocupa altura disponível
+        table.setShowGrid(true); // Habilita grades
+        table.setShowVerticalLines(true);
+        table.setShowHorizontalLines(true);
 
         // Configura o renderizador e editor para a coluna de observações (índice 12 -
         // OBS)
@@ -667,6 +672,9 @@ public class InventoryPanel extends JPanel {
                                                                                                                     // negrito
         recycleBinTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         recycleBinTable.setAutoCreateRowSorter(true);
+        recycleBinTable.setShowGrid(true); // Habilita grades
+        recycleBinTable.setShowVerticalLines(true);
+        recycleBinTable.setShowHorizontalLines(true);
 
         JScrollPane scrollPane = new JScrollPane(recycleBinTable);
         dialog.add(scrollPane, BorderLayout.CENTER);

@@ -5,6 +5,8 @@ import controller.LoginController;
 import javax.swing.*;
 import java.awt.*;
 
+import com.formdev.flatlaf.FlatLightLaf;
+
 public class MainApp extends JFrame {
     private CardLayout cardLayout;
     private JPanel cardPanel;
@@ -65,6 +67,13 @@ public class MainApp extends JFrame {
     }
 
     public static void main(String[] args) {
+        // Configura o FlatLaf antes de iniciar a GUI
+        FlatLightLaf.setup();
+
+        // Customização de Cores (Soft Gray par reduzir cansaço visual)
+        UIManager.put("Panel.background", new Color(230, 230, 230));
+        UIManager.put("Table.background", Color.WHITE);
+
         SwingUtilities.invokeLater(() -> {
             MainApp app = new MainApp();
             app.setVisible(true);

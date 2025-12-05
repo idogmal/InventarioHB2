@@ -295,26 +295,38 @@ public class ComputerFormHandler {
 
         // Ação do ComboBox para detectar seleção de "+"
         locationComboBox.addActionListener(e -> {
-            String selected = (String) locationComboBox.getSelectedItem();
-            if ("+".equals(selected)) {
-                String newCompany = JOptionPane.showInputDialog(dialog, "Nome da nova empresa:", "Cadastrar Empresa",
-                        JOptionPane.PLAIN_MESSAGE);
-                if (newCompany != null && !newCompany.trim().isEmpty()) {
-                    if (controller.addCompany(newCompany.trim().toUpperCase())) {
-                        loadLocations(locationComboBox);
-                        locationComboBox.setSelectedItem(newCompany.trim().toUpperCase());
+            SwingUtilities.invokeLater(() -> {
+                String selected = (String) locationComboBox.getSelectedItem();
+                if ("+".equals(selected)) {
+                    String newCompany = JOptionPane.showInputDialog(dialog, "Nome da nova empresa:",
+                            "Cadastrar Empresa",
+                            JOptionPane.PLAIN_MESSAGE);
+                    if (newCompany != null && !newCompany.trim().isEmpty()) {
+                        if (controller.addCompany(newCompany.trim().toUpperCase())) {
+                            loadLocations(locationComboBox);
+                            locationComboBox.setSelectedItem(newCompany.trim().toUpperCase());
+                        } else {
+                            showAlert("Erro", "Não foi possível cadastrar a empresa. Verifique se já existe.");
+                            locationComboBox.setSelectedIndex(0); // Volta para o primeiro item
+                        }
                     } else {
-                        showAlert("Erro", "Não foi possível cadastrar a empresa. Verifique se já existe.");
-                        locationComboBox.setSelectedIndex(0); // Volta para o primeiro item
+                        locationComboBox.setSelectedIndex(0); // Cancelou ou vazio
                     }
-                } else {
-                    locationComboBox.setSelectedIndex(0); // Cancelou ou vazio
                 }
-            }
+            });
         });
 
         dialog.pack(); // Ajusta o tamanho do dialog ao conteúdo
         dialog.setLocationRelativeTo(null); // Centraliza na tela
+
+        // Ajusta o foco e a posição do cursor no campo Etiqueta TI ao abrir
+        dialog.addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowOpened(java.awt.event.WindowEvent e) {
+                tagField.requestFocusInWindow();
+                tagField.setCaretPosition(tagField.getText().length());
+            }
+        });
         dialog.setVisible(true);
     }
 
