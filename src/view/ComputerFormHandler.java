@@ -83,18 +83,50 @@ public class ComputerFormHandler {
         }
         final JFormattedTextField purchaseField = purchaseFieldTemp;
 
+        // Adiciona listener para validação em tempo real
+        purchaseField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            @Override
+            public void insertUpdate(javax.swing.event.DocumentEvent e) {
+                validateDate();
+            }
+
+            @Override
+            public void removeUpdate(javax.swing.event.DocumentEvent e) {
+                validateDate();
+            }
+
+            @Override
+            public void changedUpdate(javax.swing.event.DocumentEvent e) {
+                validateDate();
+            }
+
+            private void validateDate() {
+                String text = purchaseField.getText();
+                if (text.contains("_")) {
+                    purchaseField.setBackground(Color.WHITE); // Incompleto
+                } else {
+                    if (isValidDate(text)) {
+                        purchaseField.setBackground(Color.WHITE); // Válido
+                    } else {
+                        purchaseField.setBackground(new Color(255, 200, 200)); // Inválido (Vermelho claro)
+                    }
+                }
+            }
+        });
+
         // Se for edição, preenche os campos com os dados do computador
         if (computer != null) {
             populateFields(computer, tagField, hostnameField, userField, sectorField, patrimonyField,
                     modelField, serialField, windowsField, officeField, locationComboBox, purchaseField);
         } else {
-            if (currentUser != null) {
-                userField.setText(currentUser); // Preenche automaticamente o campo usuário
-            }
+
             // Define a localização padrão se fornecida
             if (defaultLocation != null && !defaultLocation.isEmpty()) {
                 locationComboBox.setSelectedItem(defaultLocation);
             }
+
+            // Pre-fill TI tag for new computers
+            tagField.setText("TI");
         }
 
         // Cria um painel com GridBagLayout para organizar os rótulos e campos

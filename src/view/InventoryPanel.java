@@ -77,6 +77,7 @@ public class InventoryPanel extends JPanel {
 
         // --- Tabela (Central) ---
         table = new JTable(tableModel);
+        table.getTableHeader().setFont(table.getTableHeader().getFont().deriveFont(Font.BOLD)); // Cabeçalho em negrito
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.setAutoCreateRowSorter(true); // Habilita ordenação
         table.setFillsViewportHeight(true); // Ocupa altura disponível
@@ -622,6 +623,16 @@ public class InventoryPanel extends JPanel {
         JButton saveButton = new JButton("Salvar");
         saveButton.addActionListener(e -> {
             String newObservation = textArea.getText();
+            String currentObservation = computer.getObservation();
+
+            // Verifica se houve alteração, tratando null como vazio
+            String safeCurrent = (currentObservation == null) ? "" : currentObservation;
+
+            if (safeCurrent.equals(newObservation)) {
+                dialog.dispose();
+                return;
+            }
+
             computer.setObservation(newObservation);
             if (controller.updateComputer(computer, controller.getCurrentUser())) {
                 // Atualiza na tabela visualmente (embora o modelo já tenha o objeto atualizado)
@@ -651,6 +662,9 @@ public class InventoryPanel extends JPanel {
         // Modelo da tabela para a lixeira (sem edição)
         ComputerTableModel recycleBinModel = new ComputerTableModel(controller.getDeletedComputers());
         JTable recycleBinTable = new JTable(recycleBinModel);
+        recycleBinTable.getTableHeader().setFont(recycleBinTable.getTableHeader().getFont().deriveFont(Font.BOLD)); // Cabeçalho
+                                                                                                                    // em
+                                                                                                                    // negrito
         recycleBinTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         recycleBinTable.setAutoCreateRowSorter(true);
 
