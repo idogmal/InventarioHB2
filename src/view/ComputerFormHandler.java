@@ -129,20 +129,30 @@ public class ComputerFormHandler {
             tagField.setText("TI");
         }
 
+        // Checkbox Status
+        JCheckBox statusCheckBox = new JCheckBox("Computador Ativo");
+        statusCheckBox.setSelected(true); // Padrão Ativo
+        if (computer != null && "Inativo".equalsIgnoreCase(computer.getActivityStatus())) {
+            statusCheckBox.setSelected(false);
+        }
+
         // Cria um painel com GridBagLayout para organizar os rótulos e campos
         JPanel formPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.insets = new Insets(5, 5, 5, 5);
         gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
         int row = 0;
-        // Etiqueta TI
+        // Linha 1: Etiqueta TI | Status
         gbc.gridx = 0;
         gbc.gridy = row;
         formPanel.add(new JLabel("Etiqueta TI:"), gbc);
         gbc.gridx = 1;
         formPanel.add(tagField, gbc);
+
+        gbc.gridx = 2;
+        formPanel.add(statusCheckBox, gbc);
 
         // Nome do PC (Hostname)
         row++;
@@ -150,7 +160,9 @@ public class ComputerFormHandler {
         gbc.gridy = row;
         formPanel.add(new JLabel("Nome do PC:"), gbc);
         gbc.gridx = 1;
+        gbc.gridwidth = 2; // Ocupa resto da linha
         formPanel.add(hostnameField, gbc);
+        gbc.gridwidth = 1; // Reseta
 
         // Usuário
         row++;
@@ -158,15 +170,19 @@ public class ComputerFormHandler {
         gbc.gridy = row;
         formPanel.add(new JLabel("Usuário:"), gbc);
         gbc.gridx = 1;
+        gbc.gridwidth = 2;
         formPanel.add(userField, gbc);
+        gbc.gridwidth = 1;
 
-        // Localização (utiliza JComboBox) - Movido para cá conforme ordem da imagem
+        // Localização
         row++;
         gbc.gridx = 0;
         gbc.gridy = row;
         formPanel.add(new JLabel("Localização:"), gbc);
         gbc.gridx = 1;
+        gbc.gridwidth = 2;
         formPanel.add(locationComboBox, gbc);
+        gbc.gridwidth = 1;
 
         // Setor
         row++;
@@ -174,23 +190,29 @@ public class ComputerFormHandler {
         gbc.gridy = row;
         formPanel.add(new JLabel("Setor:"), gbc);
         gbc.gridx = 1;
+        gbc.gridwidth = 2;
         formPanel.add(sectorField, gbc);
+        gbc.gridwidth = 1;
 
-        // Versão do Windows
+        // Versão Windows
         row++;
         gbc.gridx = 0;
         gbc.gridy = row;
-        formPanel.add(new JLabel("Versão S.O:"), gbc);
+        formPanel.add(new JLabel("Versão Windows:"), gbc);
         gbc.gridx = 1;
+        gbc.gridwidth = 2;
         formPanel.add(windowsField, gbc);
+        gbc.gridwidth = 1;
 
-        // Versão do Office
+        // Versão Office
         row++;
         gbc.gridx = 0;
         gbc.gridy = row;
-        formPanel.add(new JLabel("Versão do Office:"), gbc);
+        formPanel.add(new JLabel("Versão Office:"), gbc);
         gbc.gridx = 1;
+        gbc.gridwidth = 2;
         formPanel.add(officeField, gbc);
+        gbc.gridwidth = 1;
 
         // Modelo
         row++;
@@ -198,15 +220,19 @@ public class ComputerFormHandler {
         gbc.gridy = row;
         formPanel.add(new JLabel("Modelo:"), gbc);
         gbc.gridx = 1;
+        gbc.gridwidth = 2;
         formPanel.add(modelField, gbc);
+        gbc.gridwidth = 1;
 
-        // Número de Série
+        // Nº Série
         row++;
         gbc.gridx = 0;
         gbc.gridy = row;
-        formPanel.add(new JLabel("Número de Série:"), gbc);
+        formPanel.add(new JLabel("Nº Série:"), gbc);
         gbc.gridx = 1;
+        gbc.gridwidth = 2;
         formPanel.add(serialField, gbc);
+        gbc.gridwidth = 1;
 
         // Data de Compra
         row++;
@@ -214,7 +240,9 @@ public class ComputerFormHandler {
         gbc.gridy = row;
         formPanel.add(new JLabel("Data de Compra:"), gbc);
         gbc.gridx = 1;
+        gbc.gridwidth = 2;
         formPanel.add(purchaseField, gbc);
+        gbc.gridwidth = 1;
 
         // Patrimônio
         row++;
@@ -222,10 +250,15 @@ public class ComputerFormHandler {
         gbc.gridy = row;
         formPanel.add(new JLabel("Patrimônio:"), gbc);
         gbc.gridx = 1;
+        gbc.gridwidth = 2;
         formPanel.add(patrimonyField, gbc);
+        gbc.gridwidth = 1;
 
         // Botão de salvar
         JButton saveButton = new JButton("Salvar");
+        saveButton.setFont(new Font("SansSerif", Font.BOLD, 14));
+        saveButton.setBackground(new Color(0, 102, 204));
+        saveButton.setForeground(Color.WHITE);
         JPanel buttonPanel = new JPanel();
         buttonPanel.add(saveButton);
 
@@ -249,6 +282,8 @@ public class ComputerFormHandler {
                 return;
             }
 
+            String currentStatus = statusCheckBox.isSelected() ? "Ativo" : "Inativo";
+
             if (computer == null) {
                 // Adiciona um novo computador
                 Computer newComputer = new Computer(
@@ -265,7 +300,8 @@ public class ComputerFormHandler {
                         "", // Observation (inicialmente vazio)
                         hostnameField.getText(),
                         sectorField.getText(),
-                        patrimonyField.getText());
+                        patrimonyField.getText(),
+                        currentStatus);
                 controller.addComputer(newComputer, currentUser);
                 System.out.println("Novo computador cadastrado: " + newComputer);
             } else {
@@ -285,11 +321,12 @@ public class ComputerFormHandler {
                         computer.getObservation(), // Preserva observação
                         hostnameField.getText(),
                         sectorField.getText(),
-                        patrimonyField.getText());
+                        patrimonyField.getText(),
+                        currentStatus);
+                updatedComputer.setId(computer.getId()); // Garante o ID correto
                 controller.editComputer(computer, updatedComputer, currentUser);
                 System.out.println("Computador atualizado: " + updatedComputer);
             }
-            dialog.dispose();
             dialog.dispose();
         });
 

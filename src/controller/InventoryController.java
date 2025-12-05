@@ -226,8 +226,9 @@ public class InventoryController {
 
     public void exportToCSV(List<Computer> computersToExport, String filePath) throws IOException {
         StringBuilder sb = new StringBuilder();
+        sb.append('\uFEFF'); // BOM para Excel abrir UTF-8 corretamente
         sb.append(
-                "ETIQUETA TI;NOME DO PC;USUÁRIO;LOCALIZAÇÃO;SETOR;VERSÃO DO WINDOWS;VERSÃO DO OFFICE;MODELO;NÚMERO DE SÉRIE;DATA DE COMPRA;TEMPO DE USO;PATRIMÔNIO;OBSERVAÇÕES\n");
+                "ETIQUETA TI;NOME DO PC;USUÁRIO;LOCALIZAÇÃO;SETOR;VERSÃO DO WINDOWS;VERSÃO DO OFFICE;MODELO;NÚMERO DE SÉRIE;DATA DE COMPRA;TEMPO DE USO;PATRIMÔNIO;OBSERVAÇÕES;STATUS\n");
         for (Computer computer : computersToExport) {
             sb.append(formatCSV(computer)).append("\n");
         }
@@ -306,7 +307,7 @@ public class InventoryController {
 
     private String formatCSV(Computer computer) {
         return String.format(
-                "\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\"",
+                "\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\"",
                 computer.getTag(),
                 computer.getHostname() != null ? computer.getHostname() : "",
                 computer.getUserName(),
@@ -319,7 +320,8 @@ public class InventoryController {
                 computer.getPurchaseDate(),
                 computer.getDetailedUsageTime(),
                 computer.getPatrimony() != null ? computer.getPatrimony() : "",
-                computer.getObservation() != null ? computer.getObservation() : "");
+                computer.getObservation() != null ? computer.getObservation() : "",
+                computer.getActivityStatus() != null ? computer.getActivityStatus() : "Ativo");
     }
 
     private String formatCSV(HistoryEntry history) {
@@ -350,7 +352,8 @@ public class InventoryController {
                     data[12], // observacao (index 12)
                     data[1], // hostname
                     data[4], // setor
-                    data[11] // patrimonio (index 11)
+                    data[11], // patrimonio (index 11)
+                    "Ativo" // Default status for existing backup
             );
         } else if (data.length >= 12) {
             // Formato anterior (sem Tempo de Uso, mas com Patrimonio)
@@ -368,8 +371,8 @@ public class InventoryController {
                     data[11], // observacao
                     data[1], // hostname
                     data[4], // setor
-                    data[10] // patrimonio
-            );
+                    data[10], // patrimonio
+                    "Ativo");
         } else {
             // Formato antigo (compatibilidade)
             String observation = "";
@@ -388,8 +391,8 @@ public class InventoryController {
                     data[9], // compra
                     data[8], // localizacao
                     observation,
-                    "", "", "" // Novos campos vazios
-            );
+                    "", "", "", // Novos campos vazios
+                    "Ativo");
         }
     }
 

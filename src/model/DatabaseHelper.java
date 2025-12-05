@@ -47,7 +47,8 @@ public class DatabaseHelper {
                 "hostname TEXT, " + // Adicionado campo hostname
                 "sector TEXT, " + // Adicionado campo setor
                 "patrimony TEXT, " + // Adicionado campo patrimonio
-                "is_deleted INTEGER DEFAULT 0" + // Adicionado campo para exclusão lógica
+                "is_deleted INTEGER DEFAULT 0, " + // Adicionado campo para exclusão lógica
+                "activity_status TEXT DEFAULT 'Ativo'" + // Adicionado campo de status (Ativo/Inativo)
                 ");";
 
         String userTableSQL = "CREATE TABLE IF NOT EXISTS users (" +
@@ -124,6 +125,20 @@ public class DatabaseHelper {
                 }
             }
 
+            try (ResultSet rs = stmt.executeQuery("PRAGMA table_info(computers)")) {
+                boolean hasActivityStatus = false;
+                while (rs.next()) {
+                    if ("activity_status".equalsIgnoreCase(rs.getString("name"))) {
+                        hasActivityStatus = true;
+                        break;
+                    }
+                }
+                if (!hasActivityStatus) {
+                    stmt.execute("ALTER TABLE computers ADD COLUMN activity_status TEXT DEFAULT 'Ativo'");
+                    System.out.println("Coluna 'activity_status' adicionada à tabela 'computers'.");
+                }
+            }
+
             // Migração: Verifica se a coluna 'is_deleted' existe
             try (ResultSet rs = stmt.executeQuery("PRAGMA table_info(computers)")) {
                 boolean hasIsDeleted = false;
@@ -151,9 +166,9 @@ public class DatabaseHelper {
      * @param computer Computador a ser inserido.
      */
     public void insertComputer(Computer computer) {
-        String sql = "INSERT INTO computers(tag, serial_number, model, brand, state, user_name, windows_version, office_version, location, purchase_date, observation, hostname, sector, patrimony, is_deleted) "
+        String sql = "INSERT INTO computers(tag, serial_number, model, brand, state, user_name, windows_version, office_version, location, purchase_date, observation, hostname, sector, patrimony, is_deleted, activity_status) "
                 +
-                "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = connect();
                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, computer.getTag());
@@ -171,6 +186,7 @@ public class DatabaseHelper {
             pstmt.setString(13, computer.getSector());
             pstmt.setString(14, computer.getPatrimony());
             pstmt.setInt(15, computer.isDeleted() ? 1 : 0);
+            pstmt.setString(16, computer.getActivityStatus());
             pstmt.executeUpdate();
             System.out.println("Computador inserido com sucesso.");
         } catch (SQLException e) {
@@ -237,7 +253,7 @@ public class DatabaseHelper {
         String sql = "UPDATE computers SET tag = ?, serial_number = ?, model = ?, brand = ?, state = ?, " +
                 "user_name = ?, windows_version = ?, office_version = ?, location = ?, purchase_date = ?, observation = ?, "
                 +
-                "hostname = ?, sector = ?, patrimony = ? "
+                "hostname = ?, sector = ?, patrimony = ?, activity_status = ? "
                 +
                 "WHERE id = ?";
         try (Connection conn = connect();
@@ -256,7 +272,8 @@ public class DatabaseHelper {
             pstmt.setString(12, computer.getHostname());
             pstmt.setString(13, computer.getSector());
             pstmt.setString(14, computer.getPatrimony());
-            pstmt.setInt(15, computer.getId());
+            pstmt.setString(15, computer.getActivityStatus());
+            pstmt.setInt(16, computer.getId());
 
             int rowsAffected = pstmt.executeUpdate();
             if (rowsAffected > 0) {
@@ -416,7 +433,7 @@ public class DatabaseHelper {
      */
     public List<Computer> loadComputers() {
         List<Computer> computers = new ArrayList<>();
-        String sql = "SELECT id, tag, serial_number, model, brand, state, user_name, windows_version, office_version, location, purchase_date, observation, hostname, sector, patrimony, is_deleted FROM computers WHERE is_deleted = 0";
+        String sql = "SELECT id, tag, serial_number, model, brand, state, user_name, windows_version, office_version, location, purchase_date, observation, hostname, sector, patrimony, is_deleted, activity_status FROM computers WHERE is_deleted = 0";
         try (Connection conn = connect();
                 PreparedStatement stmt = conn.prepareStatement(sql);
                 ResultSet rs = stmt.executeQuery()) {
@@ -436,7 +453,8 @@ public class DatabaseHelper {
                         rs.getString("observation"),
                         rs.getString("hostname"),
                         rs.getString("sector"),
-                        rs.getString("patrimony"));
+                        rs.getString("patrimony"),
+                        rs.getString("activity_status")); // Passa o status
                 computer.setDeleted(rs.getInt("is_deleted") == 1);
                 computers.add(computer);
             }
@@ -448,7 +466,7 @@ public class DatabaseHelper {
 
     public List<Computer> loadDeletedComputers() {
         List<Computer> computers = new ArrayList<>();
-        String sql = "SELECT id, tag, serial_number, model, brand, state, user_name, windows_version, office_version, location, purchase_date, observation, hostname, sector, patrimony, is_deleted FROM computers WHERE is_deleted = 1";
+        String sql = "SELECT id, tag, serial_number, model, brand, state, user_name, windows_version, office_version, location, purchase_date, observation, hostname, sector, patrimony, is_deleted, activity_status FROM computers WHERE is_deleted = 1";
         try (Connection conn = connect();
                 PreparedStatement stmt = conn.prepareStatement(sql);
                 ResultSet rs = stmt.executeQuery()) {
@@ -468,7 +486,8 @@ public class DatabaseHelper {
                         rs.getString("observation"),
                         rs.getString("hostname"),
                         rs.getString("sector"),
-                        rs.getString("patrimony"));
+                        rs.getString("patrimony"),
+                        rs.getString("activity_status")); // Passa o status
                 computer.setDeleted(rs.getInt("is_deleted") == 1);
                 computers.add(computer);
             }

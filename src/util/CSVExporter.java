@@ -4,6 +4,7 @@ import model.Computer;
 import model.HistoryEntry;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,25 +12,32 @@ public class CSVExporter {
 
     // Método para exportar dados para CSV
     public static void exportToCSV(List<Computer> computerList, String filePath) throws IOException {
-        try (FileWriter writer = new FileWriter(filePath)) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath, StandardCharsets.UTF_8))) {
+            // Escreve o cabeçalho (adicionado STATUS)
+            writer.write(
+                    "ETIQUETA TI;NOME DO PC;USUÁRIO;LOCALIZAÇÃO;SETOR;VERSÃO DO WINDOWS;VERSÃO DO OFFICE;MODELO;NÚMERO DE SÉRIE;DATA DE COMPRA;TEMPO DE USO;PATRIMÔNIO;OBSERVAÇÕES;STATUS");
+            writer.newLine();
 
-            // Cabeçalhos do CSV
-            writer.append("\"Etiqueta TI\",\"Modelo\",\"Marca\",\"Estado\",\"Usuário\",\"Número de Série\",")
-                    .append("\"Versão do Windows\",\"Versão do Office\",\"Localização\",\"Data de Compra\"\n");
-
-            // Dados do CSV
+            // Escreve os dados dos computadores
             for (Computer computer : computerList) {
-                writer.append(formatCSVField(computer.getTag()))
-                        .append(",").append(formatCSVField(computer.getModel()))
-                        .append(",").append(formatCSVField(computer.getBrand()))
-                        .append(",").append(formatCSVField(computer.getState()))
-                        .append(",").append(formatCSVField(computer.getUserName()))
-                        .append(",").append(formatCSVField(computer.getSerialNumber()))
-                        .append(",").append(formatCSVField(computer.getWindowsVersion()))
-                        .append(",").append(formatCSVField(computer.getOfficeVersion()))
-                        .append(",").append(formatCSVField(computer.getLocation()))
-                        .append(",").append(formatCSVField(computer.getPurchaseDate()))
-                        .append("\n");
+                String line = String.format(
+                        "\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\";\"%s\"",
+                        computer.getTag(),
+                        computer.getHostname() != null ? computer.getHostname() : "",
+                        computer.getUserName(),
+                        computer.getLocation(),
+                        computer.getSector() != null ? computer.getSector() : "",
+                        computer.getWindowsVersion(),
+                        computer.getOfficeVersion(),
+                        computer.getModel(),
+                        computer.getSerialNumber(),
+                        computer.getPurchaseDate(),
+                        computer.getDetailedUsageTime(), // Alterado para tempo detalhado
+                        computer.getPatrimony() != null ? computer.getPatrimony() : "",
+                        computer.getObservation() != null ? computer.getObservation() : "",
+                        computer.getActivityStatus() != null ? computer.getActivityStatus() : "Ativo"); // Status
+                writer.write(line);
+                writer.newLine();
             }
         }
     }

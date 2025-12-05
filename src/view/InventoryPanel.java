@@ -7,6 +7,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.io.File;
+import javax.swing.table.DefaultTableCellRenderer;
 
 import java.util.ArrayList; // Adicionado para inicialização segura
 import java.util.List;
@@ -86,6 +87,9 @@ public class InventoryPanel extends JPanel {
         table.setShowGrid(true); // Habilita grades
         table.setShowVerticalLines(true);
         table.setShowHorizontalLines(true);
+
+        // Configura o renderer da primeira coluna (Etiqueta TI) para mostrar o status
+        table.getColumnModel().getColumn(0).setCellRenderer(new StatusCellRenderer());
 
         // Configura o renderizador e editor para a coluna de observações (índice 12 -
         // OBS)
@@ -363,35 +367,42 @@ public class InventoryPanel extends JPanel {
     // Mantém o handleExportAction original que chama controller.exportToCSV(path)
     private void handleExportAction(Component parent) {
         JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setDialogTitle("Salvar arquivo CSV");
-        String suggestedName = "inventario" +
-                (currentLocation != null && !currentLocation.isEmpty() ? "_" + currentLocation : "") +
-                ".csv";
-        fileChooser.setSelectedFile(new File(suggestedName));
+        fileChooser.setDialogTitle("Exportar para CSV");
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        fileChooser.setSelectedFile(new File("inventario.csv"));
 
         int userSelection = fileChooser.showSaveDialog(parent);
+
         if (userSelection == JFileChooser.APPROVE_OPTION) {
-            File file = fileChooser.getSelectedFile();
-            // Garante extensão .csv
-            if (!file.getName().toLowerCase().endsWith(".csv")) {
-                file = new File(file.getParentFile(), file.getName() + ".csv");
+            File fileToSave = fileChooser.getSelectedFile();
+            if (!fileToSave.getAbsolutePath().endsWith(".csv")) {
+                fileToSave = new File(fileToSave.getAbsolutePath() + ".csv");
             }
 
-            final File finalFile = file;
-
+            File finalFile = fileToSave;
             // SwingWorker para rodar a exportação em background
-            SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+            new SwingWorker<Void, Void>() {
                 @Override
                 protected Void doInBackground() throws Exception {
                     // Obtém a lista correta para exportar
                     List<Computer> listToExport;
-                    if (currentLocation != null && !currentLocation.isEmpty()) {
+                    if (currentLocation != null && !currentLocation.equals("Todas")) {
                         listToExport = controller.getComputersByLocation(currentLocation);
                     } else {
                         listToExport = controller.getComputerList();
                     }
 
-                    // Chama o controller passando a lista filtrada
+                    // Se houver texto na busca, filtra essa lista também (opcional, mas bom para
+                    // consistência)
+                    String query = searchField.getText();
+                    if (query != null && !query.trim().isEmpty()) {
+                        String lowerQuery = query.toLowerCase();
+                        listToExport = listToExport.stream().filter(c -> c.getTag().toLowerCase().contains(lowerQuery)
+                                || c.getModel().toLowerCase().contains(lowerQuery)
+                                || c.getBrand().toLowerCase().contains(lowerQuery)
+                                || c.getUserName().toLowerCase().contains(lowerQuery)).collect(Collectors.toList());
+                    }
+
                     controller.exportToCSV(listToExport, finalFile.getAbsolutePath());
                     return null;
                 }
@@ -403,14 +414,63 @@ public class InventoryPanel extends JPanel {
                         JOptionPane.showMessageDialog(parent, "Dados exportados para " + finalFile.getName(), "Sucesso",
                                 JOptionPane.INFORMATION_MESSAGE);
                     } catch (Exception ex) {
+                        ex.printStackTrace();
                         JOptionPane.showMessageDialog(parent, "Não foi possível exportar os dados: " + ex.getMessage(),
                                 "Erro", JOptionPane.ERROR_MESSAGE);
-                        ex.printStackTrace();
                     }
                 }
-            };
+            }.execute();
+        }
+    }
 
-            worker.execute();
+    // Renderer para desenhar o indicador de status (Ativo/Inativo)
+    private class StatusCellRenderer extends DefaultTableCellRenderer {
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
+                int row, int column) {
+            super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+
+            // Obtém o objeto Computer associado à linha
+            int modelRow = table.convertRowIndexToModel(row);
+            Computer computer = tableModel.getComputerAt(modelRow);
+
+            if (computer != null) {
+                if ("Inativo".equalsIgnoreCase(computer.getActivityStatus())) {
+                    setIcon(new StatusIcon(Color.RED));
+                    setToolTipText("Inativo");
+                } else {
+                    setIcon(new StatusIcon(new Color(0, 153, 0))); // Verde escuro
+                    setToolTipText("Ativo");
+                }
+            } else {
+                setIcon(null);
+            }
+            return this;
+        }
+    }
+
+    // Ícone simples de bolinha
+    private static class StatusIcon implements Icon {
+        private final Color color;
+
+        public StatusIcon(Color color) {
+            this.color = color;
+        }
+
+        @Override
+        public void paintIcon(Component c, Graphics g, int x, int y) {
+            g.setColor(color);
+            g.fillOval(x, y + 2, 10, 10); // Centralizado verticalmente aprox
+        }
+
+        @Override
+        public int getIconWidth() {
+            return 12;
+        }
+
+        @Override
+        public int getIconHeight() {
+            return 12;
         }
     }
 

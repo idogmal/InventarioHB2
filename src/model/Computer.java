@@ -23,6 +23,13 @@ public class Computer {
     private String hostname; // Nome do PC
     private String sector; // Setor
     private String patrimony; // Patrimônio
+    // Nota: O campo 'state' já existe (Novo, Usado). Este novo é para
+    // Ativo/Inativo.
+    // Vamos chamar de 'workingStatus' ou manter 'statusStr' para clareza interna,
+    // mas getters/setters como getStatus.
+    // Melhor: chamarei de 'activityStatus' para não confundir.
+
+    private String activityStatus = "Ativo"; // Padrão: Ativo
 
     /**
      * Construtor vazio para Computer.
@@ -42,7 +49,7 @@ public class Computer {
      */
     public Computer(String tag, String model, String brand, String state, String userName,
             String serialNumber, String windowsVersion, String officeVersion, String purchaseDate, String location,
-            String observation, String hostname, String sector, String patrimony) {
+            String observation, String hostname, String sector, String patrimony, String activityStatus) {
         this.tag = tag;
         this.model = model;
         this.brand = brand;
@@ -57,13 +64,14 @@ public class Computer {
         this.hostname = hostname;
         this.sector = sector;
         this.patrimony = patrimony;
+        this.activityStatus = (activityStatus != null && !activityStatus.isEmpty()) ? activityStatus : "Ativo";
     }
 
     // Construtor de compatibilidade (sem novos campos e sem observation)
     public Computer(String tag, String model, String brand, String state, String userName,
             String serialNumber, String windowsVersion, String officeVersion, String purchaseDate, String location) {
         this(tag, model, brand, state, userName, serialNumber, windowsVersion, officeVersion, purchaseDate, location,
-                "", "", "", "");
+                "", "", "", "", "Ativo");
     }
 
     /**
@@ -71,7 +79,7 @@ public class Computer {
      */
     public Computer(int id, String tag, String model, String brand, String state, String userName,
             String serialNumber, String windowsVersion, String officeVersion, String purchaseDate, String location,
-            String observation, String hostname, String sector, String patrimony) {
+            String observation, String hostname, String sector, String patrimony, String activityStatus) {
         this.id = id;
         this.tag = tag;
         this.model = model;
@@ -87,13 +95,14 @@ public class Computer {
         this.hostname = hostname;
         this.sector = sector;
         this.patrimony = patrimony;
+        this.activityStatus = (activityStatus != null && !activityStatus.isEmpty()) ? activityStatus : "Ativo";
     }
 
     // Construtor de compatibilidade com ID (sem novos campos e sem observation)
     public Computer(int id, String tag, String model, String brand, String state, String userName,
             String serialNumber, String windowsVersion, String officeVersion, String purchaseDate, String location) {
         this(id, tag, model, brand, state, userName, serialNumber, windowsVersion, officeVersion, purchaseDate,
-                location, "", "", "", "");
+                location, "", "", "", "", "Ativo");
     }
 
     // Getters e Setters
@@ -214,6 +223,14 @@ public class Computer {
         return patrimony;
     }
 
+    public String getActivityStatus() {
+        return activityStatus;
+    }
+
+    public void setActivityStatus(String activityStatus) {
+        this.activityStatus = activityStatus;
+    }
+
     private boolean isDeleted; // Flag para exclusão lógica
 
     public boolean isDeleted() {
@@ -310,6 +327,7 @@ public class Computer {
                 ", hostname='" + hostname + '\'' +
                 ", sector='" + sector + '\'' +
                 ", patrimony='" + patrimony + '\'' +
+                ", activityStatus='" + activityStatus + '\'' +
                 '}';
     }
 }
