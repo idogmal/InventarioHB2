@@ -20,6 +20,11 @@ public class MainApp extends JFrame {
     // Armazena o usuário logado
     private String currentUser;
 
+    // Componentes do Dashboard
+    private SidebarPanel sidebarPanel;
+    private TopBarPanel topBarPanel;
+    private JPanel dashboardPanel; // Painel que contém o layout do dashboard
+
     public MainApp() {
         super("Sistema de Inventário");
         initControllers();
@@ -40,8 +45,27 @@ public class MainApp extends JFrame {
         inventoryPanel = new InventoryPanel(this, inventoryController);
 
         // Adiciona os painéis ao cardPanel
+        // Adiciona os painéis ao cardPanel
         cardPanel.add(loginPanel, "Login");
-        cardPanel.add(inventoryPanel, "Inventory");
+
+        // --- Montagem do Dashboard ---
+        dashboardPanel = new JPanel(new BorderLayout());
+
+        sidebarPanel = new SidebarPanel(this, inventoryPanel);
+        topBarPanel = new TopBarPanel(inventoryPanel);
+
+        // Conecta filtro de status
+        topBarPanel.setFilterListener(status -> inventoryPanel.setStatusFilter(status));
+
+        // Conecta o listener de contagem
+        // Conecta o listener de contagem
+        inventoryPanel.setStatsListener((total, active, inactive) -> topBarPanel.updateStats(total, active, inactive));
+
+        dashboardPanel.add(sidebarPanel, BorderLayout.WEST);
+        dashboardPanel.add(topBarPanel, BorderLayout.NORTH);
+        dashboardPanel.add(inventoryPanel, BorderLayout.CENTER);
+
+        cardPanel.add(dashboardPanel, "Inventory"); // Agora adiciona o Dashboard inteiro, não só o InventoryPanel
 
         getContentPane().add(cardPanel);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -58,6 +82,10 @@ public class MainApp extends JFrame {
     public void showInventoryPanel(String user) {
         currentUser = user;
         inventoryController.setCurrentUser(user);
+
+        // Atualiza info do usuário logado no TopBar
+        topBarPanel.setCurrentUser(user);
+
         inventoryPanel.setLocationFilter(""); // Limpa filtro para mostrar tudo
         cardLayout.show(cardPanel, "Inventory");
     }
