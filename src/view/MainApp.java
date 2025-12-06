@@ -45,7 +45,6 @@ public class MainApp extends JFrame {
         inventoryPanel = new InventoryPanel(this, inventoryController);
 
         // Adiciona os painéis ao cardPanel
-        // Adiciona os painéis ao cardPanel
         cardPanel.add(loginPanel, "Login");
 
         // --- Montagem do Dashboard ---
@@ -57,7 +56,6 @@ public class MainApp extends JFrame {
         // Conecta filtro de status
         topBarPanel.setFilterListener(status -> inventoryPanel.setStatusFilter(status));
 
-        // Conecta o listener de contagem
         // Conecta o listener de contagem
         inventoryPanel.setStatsListener((total, active, inactive) -> topBarPanel.updateStats(total, active, inactive));
 
@@ -98,8 +96,8 @@ public class MainApp extends JFrame {
         // Configura o FlatLaf antes de iniciar a GUI
         FlatLightLaf.setup();
 
-        // Customização de Cores (Soft Gray par reduzir cansaço visual)
-        UIManager.put("Panel.background", new Color(230, 230, 230));
+        // Customização de Cores (Soft Gray para reduzir cansaço visual)
+        UIManager.put("Panel.background", new Color(240, 242, 245));
         UIManager.put("Table.background", Color.WHITE);
 
         SwingUtilities.invokeLater(() -> {

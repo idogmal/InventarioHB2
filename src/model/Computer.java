@@ -23,17 +23,9 @@ public class Computer {
     private String hostname; // Nome do PC
     private String sector; // Setor
     private String patrimony; // Patrimônio
-    // Nota: O campo 'state' já existe (Novo, Usado). Este novo é para
-    // Ativo/Inativo.
-    // Vamos chamar de 'workingStatus' ou manter 'statusStr' para clareza interna,
-    // mas getters/setters como getStatus.
-    // Melhor: chamarei de 'activityStatus' para não confundir.
 
     private String activityStatus = "Ativo"; // Padrão: Ativo
 
-    /**
-     * Construtor vazio para Computer.
-     */
     private int id; // ID único do banco de dados
 
     /**

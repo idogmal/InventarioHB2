@@ -149,8 +149,7 @@ public class LoginPanel extends JPanel {
                 BorderFactory.createLineBorder(new Color(200, 200, 200)),
                 BorderFactory.createEmptyBorder(5, 10, 5, 10)));
         if (field instanceof JTextField) {
-            // ((JTextField) field).setMargin(new Insets(5, 10, 5, 10)); // Alternative to
-            // EmptyBorder
+            // Placeholder for future specific styling needs
         }
     }
 

@@ -6,7 +6,7 @@ import java.awt.geom.Path2D;
 
 public class ModernIcon implements Icon {
     public enum IconType {
-        ADD, EDIT, DELETE, EXPORT, HISTORY, RECYCLE_BIN, EXIT, USERS
+        ADD, EDIT, DELETE, EXPORT, HISTORY, RECYCLE_BIN, EXIT, USERS, EYE
     }
 
     private final IconType type;
@@ -53,6 +53,9 @@ public class ModernIcon implements Icon {
                 break;
             case USERS: // Placeholder if needed
                 drawUsers(g2);
+                break;
+            case EYE:
+                drawEye(g2);
                 break;
         }
 
@@ -141,8 +144,27 @@ public class ModernIcon implements Icon {
         // Head
         int pad = size / 4;
         g2.drawOval(size / 2 - 3, pad, 6, 6);
-        // Body
         g2.drawArc(pad, size / 2, size - 2 * pad, size / 2, 0, 180);
+    }
+
+    private void drawEye(Graphics2D g2) {
+        int pad = size / 6;
+        // Eye shape (two arcs)
+        g2.drawArc(pad, pad, size - 2 * pad, size - 2 * pad, 0, 180); // Top lid
+        g2.drawArc(pad, pad, size - 2 * pad, size - 2 * pad, 0, -180); // Bottom lid (approx for circle, but let's make
+                                                                       // it almond if possible, or just circle for
+                                                                       // simplicity)
+
+        // Better almond shape
+        Path2D p = new Path2D.Float();
+        p.moveTo(pad, size / 2);
+        p.quadTo(size / 2, pad - 2, size - pad, size / 2);
+        p.quadTo(size / 2, size - pad + 2, pad, size / 2);
+        g2.draw(p);
+
+        // Pupil
+        int pupilSize = size / 4;
+        g2.fillOval(size / 2 - pupilSize / 2, size / 2 - pupilSize / 2, pupilSize, pupilSize);
     }
 
     @Override

@@ -33,7 +33,6 @@ public class ComputerFormHandler {
         JTextField windowsField = new JTextField(20);
         JTextField officeField = new JTextField(20);
         // Para o campo de localização, utiliza JComboBox
-        // Para o campo de localização, utiliza JComboBox
         JComboBox<String> locationComboBox = new JComboBox<>();
         loadLocations(locationComboBox);
         locationComboBox.setRenderer(new CompanyListCellRenderer());
@@ -67,11 +66,6 @@ public class ComputerFormHandler {
             }
         });
 
-        // JPanel locationPanel = new JPanel(new BorderLayout()); // Removido painel
-        // auxiliar
-        // locationPanel.add(locationComboBox, BorderLayout.CENTER); // Removido
-        // locationPanel.add(deleteCompanyButton, BorderLayout.EAST); // Removido
-
         // Configuração do Campo com Máscara
         JFormattedTextField purchaseFieldTemp = null;
         try {
@@ -85,6 +79,7 @@ public class ComputerFormHandler {
 
         // Adiciona listener para validação em tempo real
         purchaseField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+
             @Override
             public void insertUpdate(javax.swing.event.DocumentEvent e) {
                 validateDate();
@@ -388,9 +383,7 @@ public class ComputerFormHandler {
         if (computer.getPurchaseDate() != null && !computer.getPurchaseDate().isEmpty()) {
             purchaseField.setText(computer.getPurchaseDate());
         } else {
-            // Se vazio, pode definir a data atual ou deixar em branco (máscara)
-            // purchaseField.setValue(new java.util.Date()); // Se quiser preencher com hoje
-            // Deixando vazio (com máscara)
+            // Se vazio, deixa em branco (máscara)
             purchaseField.setText("");
         }
     }

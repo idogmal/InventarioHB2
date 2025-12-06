@@ -9,7 +9,7 @@ import java.awt.*;
 import java.io.File;
 import javax.swing.table.DefaultTableCellRenderer;
 
-import java.util.ArrayList; // Adicionado para inicialização segura
+import java.util.ArrayList;
 import java.util.List;
 
 import java.util.stream.Collectors;
@@ -42,7 +42,6 @@ public class InventoryPanel extends JPanel {
         controller.refreshComputers();
         List<Computer> initialList = (currentLocation.isEmpty()) ? controller.getComputerList()
                 : controller.getComputersByLocation(currentLocation);
-        tableModel.setComputers(initialList);
         tableModel.setComputers(initialList);
         updateStats(initialList); // Calcula e emite estatísticas
     }
@@ -126,7 +125,6 @@ public class InventoryPanel extends JPanel {
         handleExportAction(this);
     }
 
-    // Tornando público para acesso externo
     // Tornando público para acesso externo
     public void openRecycleBinWindow() {
         JDialog recycleBinDialog = new JDialog(mainApp, "Lixeira", true);
@@ -327,10 +325,6 @@ public class InventoryPanel extends JPanel {
 
                     // Se houver texto na busca, filtra essa lista também (opcional, mas bom para
                     // consistência)
-                    // Se houver texto na busca, filtra essa lista também (opcional, mas bom para
-                    // consistência)
-                    // (Lógica de busca interna do SwingWorker simplificada ou removida se não
-                    // houver acesso ao TopBar)
                     // Assumindo sem filtro de texto no export por enquanto ou passando via
                     // parametro se necessário
                     // String query = searchField.getText();
@@ -411,22 +405,29 @@ public class InventoryPanel extends JPanel {
     // Mantém os métodos originais para abrir janelas auxiliares (usando JFrame)
     // Método privado original renomeado/mantido para implementação
 
-    // Renderizador de botão para a tabela
-    class ButtonRenderer extends JButton implements javax.swing.table.TableCellRenderer {
+    // Renderizador de botão para a tabela using DefaultTableCellRenderer to
+    // preserve grid lines
+    class ButtonRenderer extends DefaultTableCellRenderer {
+        private final Icon normalIcon = new ModernIcon(ModernIcon.IconType.EYE, 16, Color.DARK_GRAY);
+        private final Icon selectedIcon = new ModernIcon(ModernIcon.IconType.EYE, 16, Color.WHITE);
+
         public ButtonRenderer() {
-            setOpaque(true);
+            setHorizontalAlignment(JLabel.CENTER);
+            setToolTipText("Ver Observações");
         }
 
+        @Override
         public Component getTableCellRendererComponent(JTable table, Object value,
                 boolean isSelected, boolean hasFocus, int row, int column) {
+            // Let super handle all the standard coloring and opaque settings
+            super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+
             if (isSelected) {
-                setForeground(table.getSelectionForeground());
-                setBackground(table.getSelectionBackground());
+                setIcon(selectedIcon);
             } else {
-                setForeground(table.getForeground());
-                setBackground(UIManager.getColor("Button.background"));
+                setIcon(normalIcon);
             }
-            setText((value == null) ? "Ver/Editar" : value.toString());
+            setText(""); // Ensure no text is displayed
             return this;
         }
     }
@@ -437,25 +438,31 @@ public class InventoryPanel extends JPanel {
         private String label;
         private boolean isPushed;
         private Computer currentComputer;
+        private final Icon normalIcon = new ModernIcon(ModernIcon.IconType.EYE, 16, Color.DARK_GRAY);
+        private final Icon selectedIcon = new ModernIcon(ModernIcon.IconType.EYE, 16, Color.WHITE);
 
         public ButtonEditor(JCheckBox checkBox) {
             super(checkBox);
             button = new JButton();
             button.setOpaque(true);
+            button.setContentAreaFilled(true);
+            button.setBorderPainted(false);
+            button.setIcon(normalIcon);
+            button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
             button.addActionListener(e -> fireEditingStopped());
         }
 
         public Component getTableCellEditorComponent(JTable table, Object value,
                 boolean isSelected, int row, int column) {
             if (isSelected) {
-                button.setForeground(table.getSelectionForeground());
                 button.setBackground(table.getSelectionBackground());
+                button.setIcon(selectedIcon);
             } else {
-                button.setForeground(table.getForeground());
                 button.setBackground(table.getBackground());
+                button.setIcon(normalIcon);
             }
-            label = (value == null) ? "Ver/Editar" : value.toString();
-            button.setText(label);
+            label = (value == null) ? "" : value.toString();
+            button.setText(""); // No text
             isPushed = true;
 
             // Obtém o computador correspondente à linha
@@ -471,7 +478,7 @@ public class InventoryPanel extends JPanel {
                 openObservationDialog(currentComputer);
             }
             isPushed = false;
-            return label;
+            return label; // Keep label value in model, just visual is different
         }
 
         public boolean stopCellEditing() {
@@ -513,8 +520,6 @@ public class InventoryPanel extends JPanel {
             computer.setObservation(newObservation);
             if (controller.updateComputer(computer, controller.getCurrentUser())) {
                 // Atualiza na tabela visualmente (embora o modelo já tenha o objeto atualizado)
-                // tableModel.fireTableDataChanged(); // Não é estritamente necessário se o
-                // objeto é o mesmo, mas bom para garantir
                 JOptionPane.showMessageDialog(dialog, "Observação salva com sucesso!", "Sucesso",
                         JOptionPane.INFORMATION_MESSAGE);
                 dialog.dispose();
