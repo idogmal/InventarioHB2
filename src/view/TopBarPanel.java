@@ -53,12 +53,19 @@ public class TopBarPanel extends JPanel {
         add(leftPanel, BorderLayout.WEST);
 
         // -- Center: Search Bar --
-        JPanel centerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 15));
+        JPanel centerPanel = new JPanel(new GridBagLayout());
         centerPanel.setOpaque(false);
+        // Important: Add padding (EmptyBorder) to centerPanel to avoid touching sides
+        // too much if needed,
+        // but GridBagLayout will handle centering.
 
         searchField = new PlaceholderTextField("Digite para pesquisar...", 30);
         searchField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        searchField.setPreferredSize(new Dimension(400, 30));
+        // Remove fixed preferred width of 400 that causes issues, or keep it as
+        // preferred but allow shrinking.
+        // Better: let layout handle it.
+        searchField.setPreferredSize(new Dimension(300, 30));
+        searchField.setMinimumSize(new Dimension(100, 30));
 
         // Search Listener
         searchField.getDocument().addDocumentListener(new DocumentListener() {
@@ -78,8 +85,18 @@ public class TopBarPanel extends JPanel {
             }
         });
 
-        centerPanel.add(new JLabel("🔍 ")); // Simple icon
-        centerPanel.add(searchField);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.insets = new Insets(0, 10, 0, 5); // spacing
+        centerPanel.add(new JLabel("🔍 "), gbc);
+
+        gbc.gridx = 1;
+        gbc.weightx = 1.0; // Fill horizontal space
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(0, 0, 0, 10);
+        centerPanel.add(searchField, gbc);
+
         add(centerPanel, BorderLayout.CENTER);
 
         // -- Right: User Info --
