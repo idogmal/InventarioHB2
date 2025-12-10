@@ -1,2 +1,2 @@
 1.0.1
-https://github.com/idogmal/InventarioHB2/releases/download/v1.0.1/InventarioHB.jar
+https://github.com/idogmal/InventarioHB2/releases/download/v1.0.1/InventarioHB2.jar
