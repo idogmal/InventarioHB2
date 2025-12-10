@@ -49,20 +49,36 @@ public class RegisterDialog {
         dialog.getContentPane().add(panel);
         dialog.pack();
         dialog.setLocationRelativeTo(parent);
-        dialog.setVisible(true);
-
         registerButton.addActionListener(e -> {
-            String username = userField.getText();
-            String password = new String(passField.getPassword());
-            if (username.isEmpty() || password.isEmpty()) {
-                JOptionPane.showMessageDialog(dialog, "Preencha todos os campos.", "Erro", JOptionPane.ERROR_MESSAGE);
-            } else if (loginController.registerUser(username, password)) {
-                JOptionPane.showMessageDialog(dialog, "Usuário cadastrado com sucesso!", "Sucesso",
-                        JOptionPane.INFORMATION_MESSAGE);
-                dialog.dispose();
-            } else {
-                JOptionPane.showMessageDialog(dialog, "Nome de usuário já existe.", "Erro", JOptionPane.ERROR_MESSAGE);
+            try {
+                String username = userField.getText();
+                String password = new String(passField.getPassword());
+                if (username.isEmpty() || password.isEmpty()) {
+                    JOptionPane.showMessageDialog(dialog, "Preencha todos os campos.", "Erro",
+                            JOptionPane.ERROR_MESSAGE);
+                } else {
+                    String result = loginController.registerUser(username, password);
+
+                    if ("SUCCESS".equals(result)) {
+                        JOptionPane.showMessageDialog(dialog, "Usuário cadastrado com sucesso!", "Sucesso",
+                                JOptionPane.INFORMATION_MESSAGE);
+                        dialog.dispose();
+                    } else if ("EXISTS".equals(result)) {
+                        JOptionPane.showMessageDialog(dialog, "Nome de usuário já existe.", "Erro",
+                                JOptionPane.ERROR_MESSAGE);
+                    } else {
+                        JOptionPane.showMessageDialog(dialog, "Erro ao cadastrar usuário no banco de dados.", "Erro",
+                                JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            } catch (Exception ex) {
+                // ex.printStackTrace(); // Print to console just in case
+                JOptionPane.showMessageDialog(dialog,
+                        "Erro inesperado: " + ex.getClass().getSimpleName() + " - " + ex.getMessage(), "Crash",
+                        JOptionPane.ERROR_MESSAGE);
             }
         });
+
+        dialog.setVisible(true);
     }
 }

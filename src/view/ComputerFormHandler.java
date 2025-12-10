@@ -298,7 +298,6 @@ public class ComputerFormHandler {
                         patrimonyField.getText(),
                         currentStatus);
                 controller.addComputer(newComputer, currentUser);
-                System.out.println("Novo computador cadastrado: " + newComputer);
             } else {
                 // Atualiza o computador existente
                 // Preserva brand e state originais
@@ -320,7 +319,6 @@ public class ComputerFormHandler {
                         currentStatus);
                 updatedComputer.setId(computer.getId()); // Garante o ID correto
                 controller.editComputer(computer, updatedComputer, currentUser);
-                System.out.println("Computador atualizado: " + updatedComputer);
             }
             dialog.dispose();
         });

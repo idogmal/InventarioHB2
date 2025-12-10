@@ -139,7 +139,28 @@ public class LoginPanel extends JPanel {
         userField.addKeyListener(enterKey);
         passField.addKeyListener(enterKey);
 
-        add(cardPanel); // Add card to main panel (centered by GridBagLayout default)
+        // Add card panel centered
+        GridBagConstraints gbcCard = new GridBagConstraints();
+        gbcCard.gridx = 0;
+        gbcCard.gridy = 0;
+        gbcCard.weightx = 1.0;
+        gbcCard.weighty = 1.0;
+        gbcCard.anchor = GridBagConstraints.CENTER;
+        add(cardPanel, gbcCard);
+
+        // Add version label bottom-right
+        JLabel versionLabel = new JLabel("v" + MainApp.APP_VERSION);
+        versionLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        versionLabel.setForeground(Color.GRAY);
+
+        GridBagConstraints gbcVer = new GridBagConstraints();
+        gbcVer.gridx = 0;
+        gbcVer.gridy = 0;
+        gbcVer.weightx = 1.0;
+        gbcVer.weighty = 1.0;
+        gbcVer.anchor = GridBagConstraints.SOUTHEAST;
+        gbcVer.insets = new Insets(0, 0, 10, 15); // Padding from edge
+        add(versionLabel, gbcVer);
     }
 
     private void styleInput(JComponent field) {

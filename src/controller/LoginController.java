@@ -31,12 +31,15 @@ public class LoginController {
     }
 
     // Método para cadastrar novo usuário
-    public boolean registerUser(String userName, String password) {
+    public String registerUser(String userName, String password) {
         if (dbHelper.isUserExists(userName)) {
-            System.out.println("Usuário já existe.");
-            return false; // Falha ao registrar
+            return "EXISTS";
         }
-        return dbHelper.insertUser(userName, password); // Tenta registrar
+        if (dbHelper.insertUser(userName, password)) {
+            return "SUCCESS";
+        } else {
+            return "DB_ERROR";
+        }
     }
 
     // Método para listar todos os usuários cadastrados
@@ -50,19 +53,15 @@ public class LoginController {
         if ("admin".equals(userName)) {
             throw new IllegalArgumentException("O administrador não pode ser excluído.");
         }
-        if (dbHelper.deleteUser(userName)) {
-            System.out.println("Usuário excluído: " + userName);
-        } else {
-            System.out.println("Erro ao excluir usuário: " + userName);
+        if (!dbHelper.deleteUser(userName)) {
+            System.err.println("Erro ao excluir usuário: " + userName);
         }
     }
 
     // Método para editar a senha de um usuário
     public void editUserPassword(String userName, String newPassword) {
-        if (dbHelper.editUserPassword(userName, newPassword)) {
-            System.out.println("Senha alterada com sucesso para o usuário: " + userName);
-        } else {
-            System.out.println("Erro ao alterar senha para o usuário: " + userName);
+        if (!dbHelper.editUserPassword(userName, newPassword)) {
+            System.err.println("Erro ao alterar senha para o usuário: " + userName);
         }
     }
 

@@ -51,7 +51,7 @@ public class MainApp extends JFrame {
         dashboardPanel = new JPanel(new BorderLayout());
 
         sidebarPanel = new SidebarPanel(this, inventoryPanel);
-        topBarPanel = new TopBarPanel(inventoryPanel);
+        topBarPanel = new TopBarPanel(this, inventoryPanel, loginController);
 
         // Conecta filtro de status
         topBarPanel.setFilterListener(status -> inventoryPanel.setStatusFilter(status));
@@ -92,6 +92,8 @@ public class MainApp extends JFrame {
         return currentUser;
     }
 
+    public static final String APP_VERSION = "1.0.1";
+
     public static void main(String[] args) {
         // Configura o FlatLaf antes de iniciar a GUI
         FlatLightLaf.setup();
@@ -103,6 +105,9 @@ public class MainApp extends JFrame {
         SwingUtilities.invokeLater(() -> {
             MainApp app = new MainApp();
             app.setVisible(true);
+
+            // Verifica atualizações
+            util.UpdateManager.checkForUpdates(app, APP_VERSION);
         });
     }
 }

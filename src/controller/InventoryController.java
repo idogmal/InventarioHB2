@@ -139,7 +139,7 @@ public class InventoryController {
                     refreshComputers();
                 }
             } else {
-                log("Erro ao atualizar computador no banco de dados.");
+                System.err.println("Erro ao atualizar computador no banco de dados.");
             }
         }
     }
@@ -153,7 +153,7 @@ public class InventoryController {
                 addHistory(ActionType.EDITAR, user, "Atualizado observação: " + computer.getTag());
                 return true;
             } else {
-                log("Erro ao atualizar computador no banco de dados.");
+                System.err.println("Erro ao atualizar computador no banco de dados.");
                 return false;
             }
         }
@@ -168,7 +168,7 @@ public class InventoryController {
                 computerList.remove(computer);
                 addHistory(ActionType.EXCLUIR, user, "Movido para a lixeira: " + computer.getTag());
             } else {
-                log("Erro ao mover o computador para a lixeira.");
+                System.err.println("Erro ao mover o computador para a lixeira.");
             }
         }
     }
@@ -180,7 +180,7 @@ public class InventoryController {
                 computerList.add(computer);
                 addHistory(ActionType.EDITAR, user, "Restaurado da lixeira: " + computer.getTag());
             } else {
-                log("Erro ao restaurar o computador.");
+                System.err.println("Erro ao restaurar o computador.");
             }
         }
     }
@@ -233,7 +233,7 @@ public class InventoryController {
             sb.append(formatCSV(computer)).append("\n");
         }
         Files.write(Paths.get(filePath), sb.toString().getBytes("UTF-8"));
-        log("Dados exportados para o arquivo: " + filePath);
+
     }
 
     public void backupData(String filePath) throws IOException {
@@ -252,7 +252,7 @@ public class InventoryController {
         }
 
         Files.write(Paths.get(filePath), sb.toString().getBytes("UTF-8"));
-        log("Backup realizado no arquivo: " + filePath);
+
     }
 
     public void restoreData(String filePath) throws IOException {
@@ -277,7 +277,7 @@ public class InventoryController {
                 }
             }
         }
-        log("Dados restaurados do arquivo: " + filePath);
+
     }
 
     /**
@@ -287,7 +287,7 @@ public class InventoryController {
         HistoryEntry entry = new HistoryEntry(action, user, LocalDateTime.now(), description);
         historyList.add(entry);
         dbHelper.insertHistory(entry);
-        log("Histórico adicionado: " + action + " - " + description);
+
     }
 
     /**
@@ -405,13 +405,10 @@ public class InventoryController {
 
     private boolean isValidUser(String user) {
         if (user == null || user.isEmpty()) {
-            log("Erro: Operação sem usuário válido.");
+            System.err.println("Erro: Operação sem usuário válido.");
             return false;
         }
         return true;
     }
 
-    private void log(String message) {
-        System.out.println(message);
-    }
 }

@@ -1,12 +1,18 @@
 package view;
 
+import controller.LoginController;
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 public class TopBarPanel extends JPanel {
     private InventoryPanel inventoryPanel;
+    private LoginController loginController; // Added controller
+    private MainApp mainApp; // Added mainApp reference for dialog
+
     private JLabel userLabel;
     private JButton btnTotal;
     private JButton btnActive;
@@ -14,8 +20,10 @@ public class TopBarPanel extends JPanel {
     private JTextField searchField;
     private java.util.function.Consumer<String> filterListener;
 
-    public TopBarPanel(InventoryPanel inventoryPanel) {
+    public TopBarPanel(MainApp mainApp, InventoryPanel inventoryPanel, LoginController loginController) {
+        this.mainApp = mainApp;
         this.inventoryPanel = inventoryPanel;
+        this.loginController = loginController;
         initComponents();
     }
 
@@ -55,15 +63,9 @@ public class TopBarPanel extends JPanel {
         // -- Center: Search Bar --
         JPanel centerPanel = new JPanel(new GridBagLayout());
         centerPanel.setOpaque(false);
-        // Important: Add padding (EmptyBorder) to centerPanel to avoid touching sides
-        // too much if needed,
-        // but GridBagLayout will handle centering.
 
         searchField = new PlaceholderTextField("Digite para pesquisar...", 30);
         searchField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        // Remove fixed preferred width of 400 that causes issues, or keep it as
-        // preferred but allow shrinking.
-        // Better: let layout handle it.
         searchField.setPreferredSize(new Dimension(300, 30));
         searchField.setMinimumSize(new Dimension(100, 30));
 
@@ -107,8 +109,36 @@ public class TopBarPanel extends JPanel {
         userLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
         userLabel.setForeground(new Color(108, 117, 125));
 
+        // Add mouse listener for hover/click effects
+        userLabel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                String currentUser = loginController.getLoggedInUser();
+                if ("admin".equals(currentUser)) {
+                    openUserManagement();
+                }
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                if ("admin".equals(loginController.getLoggedInUser())) {
+                    userLabel.setForeground(new Color(0, 123, 255)); // Blue on hover
+                }
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                userLabel.setForeground(new Color(108, 117, 125)); // Reset color
+            }
+        });
+
         rightPanel.add(userLabel);
         add(rightPanel, BorderLayout.EAST);
+    }
+
+    private void openUserManagement() {
+        UserManagementDialog dialog = new UserManagementDialog(mainApp, loginController);
+        dialog.setVisible(true);
     }
 
     private void updateFilter() {
@@ -158,5 +188,13 @@ public class TopBarPanel extends JPanel {
 
     public void setCurrentUser(String user) {
         userLabel.setText("👤 " + user);
+
+        if ("admin".equals(user)) {
+            userLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+            userLabel.setToolTipText("Clique para gerenciar usuários");
+        } else {
+            userLabel.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+            userLabel.setToolTipText(null);
+        }
     }
 }

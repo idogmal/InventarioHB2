@@ -22,7 +22,7 @@ public class DatabaseHelper {
         try {
             return DriverManager.getConnection(DB_URL);
         } catch (SQLException e) {
-            System.out.println("Erro ao conectar ao banco de dados: " + e.getMessage());
+            System.err.println("Erro ao conectar ao banco de dados: " + e.getMessage());
             return null;
         }
     }
@@ -84,7 +84,7 @@ public class DatabaseHelper {
                 if (rs.next() && rs.getInt(1) == 0) {
                     stmt.execute("INSERT INTO companies (name) VALUES ('NPD')");
                     stmt.execute("INSERT INTO companies (name) VALUES ('INFAN')");
-                    System.out.println("Empresas padrão (NPD, INFAN) inseridas.");
+
                 }
             }
 
@@ -109,19 +109,19 @@ public class DatabaseHelper {
                 }
                 if (!hasObservation) {
                     stmt.execute("ALTER TABLE computers ADD COLUMN observation TEXT");
-                    System.out.println("Coluna 'observation' adicionada à tabela 'computers'.");
+
                 }
                 if (!hasHostname) {
                     stmt.execute("ALTER TABLE computers ADD COLUMN hostname TEXT");
-                    System.out.println("Coluna 'hostname' adicionada à tabela 'computers'.");
+
                 }
                 if (!hasSector) {
                     stmt.execute("ALTER TABLE computers ADD COLUMN sector TEXT");
-                    System.out.println("Coluna 'sector' adicionada à tabela 'computers'.");
+
                 }
                 if (!hasPatrimony) {
                     stmt.execute("ALTER TABLE computers ADD COLUMN patrimony TEXT");
-                    System.out.println("Coluna 'patrimony' adicionada à tabela 'computers'.");
+
                 }
             }
 
@@ -135,7 +135,7 @@ public class DatabaseHelper {
                 }
                 if (!hasActivityStatus) {
                     stmt.execute("ALTER TABLE computers ADD COLUMN activity_status TEXT DEFAULT 'Ativo'");
-                    System.out.println("Coluna 'activity_status' adicionada à tabela 'computers'.");
+
                 }
             }
 
@@ -150,13 +150,12 @@ public class DatabaseHelper {
                 }
                 if (!hasIsDeleted) {
                     stmt.execute("ALTER TABLE computers ADD COLUMN is_deleted INTEGER DEFAULT 0");
-                    System.out.println("Coluna 'is_deleted' adicionada à tabela 'computers'.");
+
                 }
             }
 
-            System.out.println("Tabelas criadas/verificadas com sucesso.");
         } catch (SQLException e) {
-            System.out.println("Erro ao criar tabelas: " + e.getMessage());
+            System.err.println("Erro ao criar tabelas: " + e.getMessage());
         }
     }
 
@@ -188,9 +187,9 @@ public class DatabaseHelper {
             pstmt.setInt(15, computer.isDeleted() ? 1 : 0);
             pstmt.setString(16, computer.getActivityStatus());
             pstmt.executeUpdate();
-            System.out.println("Computador inserido com sucesso.");
+
         } catch (SQLException e) {
-            System.out.println("Erro ao inserir computador: " + e.getMessage());
+            System.err.println("Erro ao inserir computador: " + e.getMessage());
         }
     }
 
@@ -207,14 +206,14 @@ public class DatabaseHelper {
             pstmt.setInt(1, computer.getId());
             int rowsAffected = pstmt.executeUpdate();
             if (rowsAffected > 0) {
-                System.out.println("Computador movido para a lixeira.");
+
                 return true;
             } else {
-                System.out.println("Nenhum computador foi movido para a lixeira.");
+
                 return false;
             }
         } catch (SQLException e) {
-            System.out.println("Erro ao excluir (soft delete) computador: " + e.getMessage());
+            System.err.println("Erro ao excluir (soft delete) computador: " + e.getMessage());
             return false;
         }
     }
@@ -232,13 +231,13 @@ public class DatabaseHelper {
             pstmt.setInt(1, computer.getId());
             int rowsAffected = pstmt.executeUpdate();
             if (rowsAffected > 0) {
-                System.out.println("Computador restaurado com sucesso.");
+
                 return true;
             } else {
                 return false;
             }
         } catch (SQLException e) {
-            System.out.println("Erro ao restaurar computador: " + e.getMessage());
+            System.err.println("Erro ao restaurar computador: " + e.getMessage());
             return false;
         }
     }
@@ -277,14 +276,14 @@ public class DatabaseHelper {
 
             int rowsAffected = pstmt.executeUpdate();
             if (rowsAffected > 0) {
-                System.out.println("Computador atualizado com sucesso.");
+
                 return true;
             } else {
-                System.out.println("Nenhum computador foi atualizado.");
+
                 return false;
             }
         } catch (SQLException e) {
-            System.out.println("Erro ao atualizar computador: " + e.getMessage());
+            System.err.println("Erro ao atualizar computador: " + e.getMessage());
             return false;
         }
     }
@@ -305,7 +304,7 @@ public class DatabaseHelper {
             ResultSet rs = pstmt.executeQuery();
             return rs.getInt(1) > 0;
         } catch (SQLException e) {
-            System.out.println("Erro ao validar login: " + e.getMessage());
+            System.err.println("Erro ao validar login: " + e.getMessage());
             return false;
         }
     }
@@ -325,7 +324,7 @@ public class DatabaseHelper {
                 users.add(new User(rs.getString("user_name"), rs.getString("password")));
             }
         } catch (SQLException e) {
-            System.out.println("Erro ao obter lista de usuários: " + e.getMessage());
+            System.err.println("Erro ao obter lista de usuários: " + e.getMessage());
         }
         return users;
     }
@@ -340,7 +339,7 @@ public class DatabaseHelper {
                 users.add(new User(rs.getString("user_name"), rs.getString("password")));
             }
         } catch (SQLException e) {
-            System.out.println("Erro ao carregar usuários: " + e.getMessage());
+            System.err.println("Erro ao carregar usuários: " + e.getMessage());
         }
         return users;
     }
@@ -359,10 +358,10 @@ public class DatabaseHelper {
             pstmt.setString(1, userName);
             pstmt.setString(2, password);
             pstmt.executeUpdate();
-            System.out.println("Usuário inserido com sucesso: " + userName);
+
             return true;
         } catch (SQLException e) {
-            System.out.println("Erro ao inserir usuário: " + e.getMessage());
+            System.err.println("Erro ao inserir usuário: " + e.getMessage());
             return false;
         }
     }
@@ -381,7 +380,7 @@ public class DatabaseHelper {
             ResultSet rs = pstmt.executeQuery();
             return rs.getInt(1) > 0;
         } catch (SQLException e) {
-            System.out.println("Erro ao verificar existência de usuário: " + e.getMessage());
+            System.err.println("Erro ao verificar existência de usuário: " + e.getMessage());
             return false;
         }
     }
@@ -402,7 +401,7 @@ public class DatabaseHelper {
             int rowsAffected = pstmt.executeUpdate();
             return rowsAffected > 0;
         } catch (SQLException e) {
-            System.out.println("Erro ao alterar senha do usuário: " + e.getMessage());
+            System.err.println("Erro ao alterar senha do usuário: " + e.getMessage());
             return false;
         }
     }
@@ -421,7 +420,7 @@ public class DatabaseHelper {
             int rowsAffected = pstmt.executeUpdate();
             return rowsAffected > 0;
         } catch (SQLException e) {
-            System.out.println("Erro ao excluir usuário: " + e.getMessage());
+            System.err.println("Erro ao excluir usuário: " + e.getMessage());
             return false;
         }
     }
@@ -459,7 +458,7 @@ public class DatabaseHelper {
                 computers.add(computer);
             }
         } catch (SQLException e) {
-            System.out.println("Erro ao carregar computadores: " + e.getMessage());
+            System.err.println("Erro ao carregar computadores: " + e.getMessage());
         }
         return computers;
     }
@@ -492,7 +491,7 @@ public class DatabaseHelper {
                 computers.add(computer);
             }
         } catch (SQLException e) {
-            System.out.println("Erro ao carregar computadores excluídos: " + e.getMessage());
+            System.err.println("Erro ao carregar computadores excluídos: " + e.getMessage());
         }
         return computers;
     }
@@ -511,9 +510,9 @@ public class DatabaseHelper {
             pstmt.setString(3, history.getTimestamp().toString());
             pstmt.setString(4, history.getDescription());
             pstmt.executeUpdate();
-            System.out.println("Histórico inserido com sucesso.");
+
         } catch (SQLException e) {
-            System.out.println("Erro ao inserir histórico: " + e.getMessage());
+            System.err.println("Erro ao inserir histórico: " + e.getMessage());
         }
     }
 
@@ -537,7 +536,7 @@ public class DatabaseHelper {
                 historyList.add(history);
             }
         } catch (SQLException e) {
-            System.out.println("Erro ao carregar histórico: " + e.getMessage());
+            System.err.println("Erro ao carregar histórico: " + e.getMessage());
         }
         return historyList;
     }
@@ -557,7 +556,7 @@ public class DatabaseHelper {
                 companies.add(rs.getString("name"));
             }
         } catch (SQLException e) {
-            System.out.println("Erro ao obter lista de empresas: " + e.getMessage());
+            System.err.println("Erro ao obter lista de empresas: " + e.getMessage());
         }
         return companies;
     }
@@ -574,10 +573,10 @@ public class DatabaseHelper {
                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, name);
             pstmt.executeUpdate();
-            System.out.println("Empresa inserida com sucesso: " + name);
+
             return true;
         } catch (SQLException e) {
-            System.out.println("Erro ao inserir empresa: " + e.getMessage());
+            System.err.println("Erro ao inserir empresa: " + e.getMessage());
             return false;
         }
     }
@@ -596,7 +595,7 @@ public class DatabaseHelper {
             int rowsAffected = pstmt.executeUpdate();
             return rowsAffected > 0;
         } catch (SQLException e) {
-            System.out.println("Erro ao excluir empresa: " + e.getMessage());
+            System.err.println("Erro ao excluir empresa: " + e.getMessage());
             return false;
         }
     }

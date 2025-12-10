@@ -69,7 +69,7 @@ public class CSVExporter {
                     );
                     computers.add(computer);
                 } else {
-                    System.out.println("Linha ignorada (formato inválido): " + line);
+                    System.err.println("Linha ignorada (formato inválido): " + line);
                 }
             }
         }

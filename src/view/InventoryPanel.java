@@ -92,6 +92,18 @@ public class InventoryPanel extends JPanel {
         JScrollPane tableScrollPane = new JScrollPane(table);
         add(tableScrollPane, BorderLayout.CENTER); // Adiciona tabela ao Centro
 
+        // --- Rodapé com Versão ---
+        JPanel footerPanel = new JPanel(new BorderLayout());
+        footerPanel.setOpaque(false);
+
+        JLabel versionLabel = new JLabel("v" + MainApp.APP_VERSION);
+        versionLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        versionLabel.setForeground(Color.GRAY);
+        versionLabel.setBorder(BorderFactory.createEmptyBorder(2, 0, 2, 5)); // Margem direita
+
+        footerPanel.add(versionLabel, BorderLayout.EAST);
+        add(footerPanel, BorderLayout.SOUTH);
+
         // --- Painel de Botões à Esquerda antigo removido ---
         // Botões agora estão no SidebarPanel
 
