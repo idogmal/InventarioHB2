@@ -59,7 +59,7 @@ public class UpdateManager {
     private static boolean isNewerVersion(String current, String remote) {
         // Simple string comparison for now, can be improved to semantic versioning
         // parsing
-        // e.g. 1.0.0 vs 1.0.1
+        // e.g. 1.0.1 vs 1.0.2
         return remote.compareTo(current) > 0;
     }
 

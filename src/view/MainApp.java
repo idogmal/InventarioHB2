@@ -92,7 +92,7 @@ public class MainApp extends JFrame {
         return currentUser;
     }
 
-    public static final String APP_VERSION = "1.0.1";
+    public static final String APP_VERSION = "1.0.2";
 
     public static void main(String[] args) {
         // Configura o FlatLaf antes de iniciar a GUI
